@@ -1,18 +1,21 @@
 #!/bin/bash
 
-export -n $(egrep -v '^#' .env | xargs)
+export -n $(egrep -v '^#' $(dirname $0)/.env | xargs)
 
 
 if [ -z "${BACKUP_DIR}" ]; then
     echo "Empty Variable BACKUP_DIR"
+    exit 1
 fi
 
 if [ -z "${MYSQL_HOST}" ]; then
     echo "Empty Variable MYSQL_HOST"
+    exit 1
 fi
 
 if [ -z "${MYSQL_USER}" ]; then
     echo "Empty Variable MYSQL_USER"
+    exit 1
 fi
 
 
@@ -60,6 +63,8 @@ VIEWS=$(echo -e "${VIEWS_LIST}" | tr ":!" "\n")
 for VIEW in $VIEWS; do # Concat ignore command
     VIEW_IGNORE_ARG="${VIEW_IGNORE_ARG} --ignore-table=${VIEW}"
 done
+# Replace ` in ${VIEW_IGNORE_ARG}, does not work with ` in table/database names
+VIEW_IGNORE_ARG=${VIEW_IGNORE_ARG//\`/}
 # echo -e "${VIEW_IGNORE_ARG}"
 
 echo "Structure..."
@@ -69,7 +74,7 @@ echo "Data ..."
 mysqldump ${MYSQLDUMP_DEFAULTS} --routines=FALSE --triggers=FALSE --events=FALSE --no-create-info ${VIEW_IGNORE_ARG} --databases ${DBS} > ${BACKUP_DIR}/database.sql
 
 echo "Users ..."
-mysqldump ${MYSQLDUMP_DEFAULTS} mysql --complete-insert --tables user db > ${BACKUP_DIR}/users.sql
+mysqldump ${MYSQLDUMP_DEFAULTS} mysql --no-create-info --complete-insert --tables user db > ${BACKUP_DIR}/users.sql
 
 echo "Routines ..."
 mysqldump ${MYSQLDUMP_DEFAULTS} --routines=TRUE --triggers=FALSE --events=FALSE --no-create-info --no-data --no-create-db --databases ${DBS} > ${BACKUP_DIR}/routines.sql
