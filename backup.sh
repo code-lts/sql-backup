@@ -1,7 +1,12 @@
 #!/bin/bash
 
-export -n $(egrep -v '^#' $(dirname $0)/.env | xargs)
-
+# from : github:builtinnya/dotenv-shell-loader
+DOTENV_SHELL_LOADER_SAVED_OPTS=$(set +o)
+set -o allexport
+[ -f "$(dirname $0)/.env" ] && source "$(dirname $0)/.env"
+set +o allexport
+eval "$DOTENV_SHELL_LOADER_SAVED_OPTS"
+unset DOTENV_SHELL_LOADER_SAVED_OPTS
 
 if [ -z "${BACKUP_DIR}" ]; then
     echo "Empty Variable BACKUP_DIR"
@@ -116,4 +121,6 @@ sed -i -e 's/\\\\//g' ${BACKUP_DIR}/grants.sql
 # echo -e ${GRANTS_SQL}
 
 echo "Backup done !"
-
+if [ ! -z "${ON_SUCCESS}" ]; then
+`echo ${ON_SUCCESS}`
+fi

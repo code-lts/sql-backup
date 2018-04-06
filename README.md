@@ -31,6 +31,9 @@ vi .env
 | MYSQL_PASS     	|                                                                                                                                	| YES      	|
 | SKIP_DATABASES 	|                                                                                                                                	| YES      	|
 | EXPERT_ARGS    	| --default-character-set=utf8 --extended-insert=FALSE --single-transaction --skip-comments --skip-dump-date --hex-blob --tz-utc 	| YES      	|
+| ON_SUCCESS     	|                                                                                                                                	| YES      	|
+
+> ON_SUCCESS is called on script success
 
 ## Example .env
 
