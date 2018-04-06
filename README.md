@@ -32,3 +32,25 @@ vi .env
 | SKIP_DATABASES 	|                                                                                                                                	| YES      	|
 | EXPERT_ARGS    	| --default-character-set=utf8 --extended-insert=FALSE --single-transaction --skip-comments --skip-dump-date --hex-blob --tz-utc 	| YES      	|
 
+## Example .env
+
+```bash
+BACKUP_DIR=/sql_backup
+MYSQL_HOST=localhost
+MYSQL_USER=root
+MYSQL_PASS=root
+SKIP_DATABASES=mysql,information_schema,performance_schema,phpmyadmin
+```
+
+## Files
+
+| NAME          	| DESCRIPTION                               	|
+|---------------	|-------------------------------------------	|
+| database.sql  	| All the data                              	|
+| structure.sql 	| The structure of the databases and tables 	|
+| grants.sql    	| The grants for all users except root      	|
+| events.sql    	| The scheduled events                      	|
+| views.sql     	| The views                                 	|
+| triggers.sql  	| The triggers                              	|
+| routines.sql  	| All the procedures & functions            	|
+| users.sql     	| All MySQL users                           	|
