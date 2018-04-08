@@ -8,6 +8,16 @@ set +o allexport
 eval "$DOTENV_SHELL_LOADER_SAVED_OPTS"
 unset DOTENV_SHELL_LOADER_SAVED_OPTS
 
+if ! [ -x "$(command -v mysql)" ]; then
+  echo 'Error: mysql is not installed !, apt-get install -y mysql-client' >&2
+  exit 1
+fi
+
+if ! [ -x "$(command -v mysqldump)" ]; then
+  echo 'Error: mysqldump is not installed !, apt-get install -y mysql-client' >&2
+  exit 1
+fi
+
 if [ -z "${BACKUP_DIR}" ]; then
     echo "Empty Variable BACKUP_DIR"
     exit 1

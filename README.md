@@ -1,4 +1,6 @@
 # sql-backup
+[![Maintainability](https://api.codeclimate.com/v1/badges/9af0b964df176436608d/maintainability)](https://codeclimate.com/github/williamdes/sql-backup/maintainability)
+
 Backup your MySQL server ( data, users, grants, views, triggers, routines, events )
 
 ## Install
