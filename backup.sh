@@ -3,7 +3,16 @@
 # from : github:builtinnya/dotenv-shell-loader
 DOTENV_SHELL_LOADER_SAVED_OPTS=$(set +o)
 set -o allexport
-[ -f "$(dirname $0)/.env" ] && source "$(dirname $0)/.env"
+if [ ! -z "${BACKUP_CONFIG_ENVFILE}" ]; then
+    if [ ! -f "${BACKUP_CONFIG_ENVFILE}" ]; then
+        echo "Value of variable BACKUP_CONFIG_ENVFILE is not a file (${BACKUP_CONFIG_ENVFILE})"
+        exit 1
+    else
+      [ -f "${BACKUP_CONFIG_ENVFILE}" ] && source "${BACKUP_CONFIG_ENVFILE}"
+    fi
+else
+  [ -f "$(dirname $0)/.env" ] && source "$(dirname $0)/.env"
+fi
 set +o allexport
 eval "$DOTENV_SHELL_LOADER_SAVED_OPTS"
 unset DOTENV_SHELL_LOADER_SAVED_OPTS
@@ -21,6 +30,11 @@ fi
 if [ -z "${BACKUP_DIR}" ]; then
     echo "Empty Variable BACKUP_DIR"
     exit 1
+else
+  if [ ! -d "${BACKUP_DIR}" ]; then
+      echo "Value of variable BACKUP_DIR is not a directory (${BACKUP_DIR})"
+      exit 1
+  fi
 fi
 
 if [ -z "${MYSQL_HOST}" ]; then

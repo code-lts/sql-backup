@@ -17,10 +17,25 @@ cp .env-example .env
 ```bash
 nano .env
 ```
-or
+or  
 ```bash
 vi .env
 
+```
+then  
+```
+./backup.sh
+```
+## Extras
+
+To use an external env file in a custom location use example: 
+```bash
+
+export BACKUP_CONFIG_ENVFILE="/home/myuser/secretbackupconfig.env.txt"
+
+./backup.sh
+
+unset BACKUP_CONFIG_ENVFILE
 ```
 
 ## Options
