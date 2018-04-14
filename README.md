@@ -28,7 +28,7 @@ then
 ```
 ## Extras
 
-To use an external env file in a custom location use example: 
+To use an external env file in a custom location, example :
 ```bash
 
 export BACKUP_CONFIG_ENVFILE="/home/myuser/secretbackupconfig.env.txt"
@@ -36,7 +36,12 @@ export BACKUP_CONFIG_ENVFILE="/home/myuser/secretbackupconfig.env.txt"
 ./backup.sh
 
 unset BACKUP_CONFIG_ENVFILE
-```
+```   
+You can use the variables of the env file in the `ON_SUCCESS` variable, example :   
+```bash
+ON_SUCCESS="${BACKUP_DIR}/onsuccessscript.sh"
+```   
+
 
 ## Options
 
