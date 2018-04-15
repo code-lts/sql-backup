@@ -1,4 +1,5 @@
 language: bash
+cache: bundler
 services:
   - mysql
 addons:

@@ -14,15 +14,15 @@ testEMPTY_VAR_Fail() {
 
 testBACKUP_CONFIG_ENVFILE_Fail() {
   export BACKUP_CONFIG_ENVFILE="/home/myuser/secretbackupconfig.env.txt"
-  ./backup.sh 1>/dev/null 2>&1
+  ./backup.sh
   assertEquals 201 "$?"
   unset BACKUP_CONFIG_ENVFILE
 }
 
 fillConfigFile() {
-  echo "MYSQL_HOST=localhost" >> $1
-  echo "MYSQL_USER=root" >> $1
-  echo "MYSQL_PASS=testbench" >> $1
+  echo "MYSQL_HOST=db.wdes.local" >> $1
+  echo "MYSQL_USER=sys" >> $1
+  echo "MYSQL_PASS=@system@mysql!" >> $1
   echo "SKIP_DATABASES=mysql,information_schema,performance_schema" >> $1
 }
 
@@ -41,7 +41,8 @@ postTest() {
 testBACKUP_CONFIG_ENVFILE_Success() {
   preTest
   export BACKUP_CONFIG_ENVFILE="./test/envfile"
-  ./backup.sh 1>/dev/null 2>&1
+  echo "MYSQL_HOST=tests.test" >> "./test/envfile"
+  ./backup.sh
   assertEquals 204 "$?"
   unset BACKUP_CONFIG_ENVFILE
   postTest
@@ -54,6 +55,7 @@ testBACKUP_Success() {
   assertEquals 0 "$?"
   unset BACKUP_CONFIG_ENVFILE
   ls ./test/
+  cat ./test/structure.sql
   postTest
 }
 

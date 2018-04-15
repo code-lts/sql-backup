@@ -71,14 +71,14 @@ if [ ! -z "${SKIP_DATABASES}" ]; then
     DB_LIST_SQL="${DB_LIST_SQL: : -1}"
     DB_LIST_SQL="${DB_LIST_SQL});"
 fi
-#    echo -e "${DB_LIST_SQL}"
+    echo -e "${DB_LIST_SQL}"
 # Get result
 DB_LIST=`mysql ${MYSQL_CONN} -ANe"${DB_LIST_SQL}"`
 
 if [ "$?" -ne 0 ]; then
   exitWithMsg 204 "Databases listing failed"
 fi
-
+echo -e "${DB_LIST}"
 for DB in $DB_LIST; do # Concat ignore command
     DBS="${DBS} ${DB}"
 done
