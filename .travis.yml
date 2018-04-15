@@ -1,0 +1,19 @@
+language: bash
+services:
+  - mysql
+addons:
+  apt:
+    sources:
+      - mysql-5.7-trusty
+    packages:
+      - mysql-server
+      - mysql-client
+before_script:
+    - curl -L "http://downloads.sourceforge.net/shunit2/shunit2-2.0.3.tgz" | tar zx
+    - chmod +x ./shunit2-2.0.3/src/shell/shunit2
+script:
+    - bash tests.sh
+before_install:
+  - sudo mysql -e "use mysql; update user set authentication_string=PASSWORD('testbench') where User='root'; update user set plugin='mysql_native_password';FLUSH PRIVILEGES;"
+  - sudo mysql_upgrade
+  - sudo service mysql restart
