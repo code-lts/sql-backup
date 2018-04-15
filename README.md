@@ -1,6 +1,8 @@
 # sql-backup
 [![Maintainability](https://api.codeclimate.com/v1/badges/9af0b964df176436608d/maintainability)](https://codeclimate.com/github/williamdes/sql-backup/maintainability)
 
+[![Build Status](https://travis-ci.org/williamdes/sql-backup.svg?branch=master)](https://travis-ci.org/williamdes/sql-backup)
+
 Backup your MySQL server ( data, users, grants, views, triggers, routines, events )
 
 ## Install
@@ -64,7 +66,7 @@ BACKUP_DIR=/sql_backup
 MYSQL_HOST=localhost
 MYSQL_USER=root
 MYSQL_PASS=root
-SKIP_DATABASES=mysql,information_schema,performance_schema,phpmyadmin
+SKIP_DATABASES=mysql,sys,information_schema,performance_schema,phpmyadmin
 ```
 
 ## Files

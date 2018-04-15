@@ -54,7 +54,7 @@ fillConfigFile() {
   echo "MYSQL_HOST=${MYSQL_HOST}" >> $1
   echo "MYSQL_USER=${MYSQL_USER}" >> $1
   echo "MYSQL_PASS=${MYSQL_PASS}" >> $1
-  echo "SKIP_DATABASES=mysql,information_schema,performance_schema" >> $1
+  echo "SKIP_DATABASES=mysql,sys,information_schema,performance_schema" >> $1
 }
 
 preTest() {
