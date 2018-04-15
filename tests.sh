@@ -38,7 +38,7 @@ compareFilesOrExit() {
 
   if [ "$chk1" != "$chk2" ]; then
     fail "Files are not identical ($1) ($2)"
-    diff -ia --unified=0 --suppress-common-lines "$1" "$2"
+    diff -ia --unified=2 --suppress-common-lines "$1" "$2"
   fi
 
 }
