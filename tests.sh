@@ -8,15 +8,39 @@
 # 205 = A dump failed
 # 206 = No databases to backup
 
-MYSQL_HOST="192.168.2.40"
+MYSQL_HOST="localhost"
 MYSQL_USER="root"
 MYSQL_PASS="testbench"
 SCRIPT_ROOT=`dirname $0`
+echo "SCRIPT_ROOT=${SCRIPT_ROOT}"
 MYSQLCREDS="-h${MYSQL_HOST} -u${MYSQL_USER} -p${MYSQL_PASS}"
 
 testEMPTY_VAR_Fail() {
   ./backup.sh 1>/dev/null 2>&1
   assertEquals 200 "$?"
+}
+
+compareFiles() {
+  compareFilesOrExit "${SCRIPT_ROOT}/samples/$1/structure.sql" "${SCRIPT_ROOT}/test/structure.sql"
+  compareFilesOrExit "${SCRIPT_ROOT}/samples/$1/database.sql" "${SCRIPT_ROOT}/test/database.sql"
+  compareFilesOrExit "${SCRIPT_ROOT}/samples/$1/grants.sql" "${SCRIPT_ROOT}/test/grants.sql"
+  compareFilesOrExit "${SCRIPT_ROOT}/samples/$1/users.sql" "${SCRIPT_ROOT}/test/users.sql"
+  compareFilesOrExit "${SCRIPT_ROOT}/samples/$1/events.sql" "${SCRIPT_ROOT}/test/events.sql"
+  compareFilesOrExit "${SCRIPT_ROOT}/samples/$1/views.sql" "${SCRIPT_ROOT}/test/views.sql"
+  compareFilesOrExit "${SCRIPT_ROOT}/samples/$1/triggers.sql" "${SCRIPT_ROOT}/test/triggers.sql"
+  compareFilesOrExit "${SCRIPT_ROOT}/samples/$1/routines.sql" "${SCRIPT_ROOT}/test/routines.sql"
+}
+
+compareFilesOrExit() {
+
+  chk1=`sha1sum $1 | awk -F" " '{print $1}'`
+  chk2=`sha1sum $2 | awk -F" " '{print $1}'`
+
+  if [ "$chk1" != "$chk2" ]; then
+    fail "Files are not identical"
+    diff "$1" "$2"
+  fi
+
 }
 
 testBACKUP_CONFIG_ENVFILE_Fail() {
@@ -36,7 +60,7 @@ fillConfigFile() {
 preTest() {
   mkdir ./test
   touch ./test/envfile
-  echo "BACKUP_DIR=`dirname $0`/test/" > ./test/envfile
+  echo "BACKUP_DIR=${SCRIPT_ROOT}/test/" > ./test/envfile
   fillConfigFile ./test/envfile
 }
 
@@ -71,7 +95,7 @@ testBACKUP_Success() {
   ./backup.sh
   assertEquals 0 "$?"
   mysql ${MYSQLCREDS} -e "DROP DATABASE testbench;"
-  cmp --silent ${SCRIPT_ROOT}/samples/emptydatabase.sql ./test/structure.sql || fail "files are different"
+  compareFiles "empty"
   unset BACKUP_CONFIG_ENVFILE
   postTest
 }
