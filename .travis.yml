@@ -1,5 +1,10 @@
 language: bash
 cache: bundler
+dependencies:
+  cache_directories:
+    - "~/.apt-cache"
+  pre:
+    - sudo rm -rf /var/cache/apt/archives && sudo ln -s ~/.apt-cache /var/cache/apt/archives && mkdir -p ~/.apt-cache/partial
 services:
   - mysql
 addons:
@@ -15,5 +20,5 @@ before_script:
 script:
     - bash tests.sh
 before_install:
-  - sudo mysql -e "use mysql; update user set authentication_string=PASSWORD('testbench'), host='%', password_last_changed=FROM_UNIXTIME(0) where User='root'; update user set plugin='mysql_native_password'; delete from user where User != 'root' OR host != '%'; delete from user where User = 'sys'; FLUSH PRIVILEGES;"
+  - sudo mysql -e "use mysql; update user set authentication_string=PASSWORD('testbench'), host='%', password_last_changed=FROM_UNIXTIME(1523829600) where User='root'; update user set plugin='mysql_native_password'; delete from user where User != 'root' OR host != '%'; delete from user where User = 'sys'; FLUSH PRIVILEGES;"
   - sudo service mysql restart
