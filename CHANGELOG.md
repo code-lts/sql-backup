@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added optional `BACKUP_CONFIG_ENVFILE` variable to set the env file location
 - Updated .env-example (commented out some optional variables)
 - Added check if `BACKUP_DIR` exists
+- Added exit codes
+- Added unit tests
+- Updated .gitignore
+- Bug fix (no views)
+
+### Will be done
+- Skipping users & grants
+
 
 ## [1.0.0] - 2018-04-07
 ### Added
