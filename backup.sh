@@ -87,7 +87,22 @@ for DB in $DB_LIST; do # Concat ignore command
     DBS="${DBS} ${DB}"
 done
 
-VIEW_LIST_SQL="SET SESSION group_concat_max_len = 1000000;SELECT IFNULL(GROUP_CONCAT(concat(':!\`',table_schema,'\`.\`',table_name,'\`') SEPARATOR ''),'') FROM information_schema.views;"
+VIEW_LIST_SQL="SET SESSION group_concat_max_len = 1000000;SELECT IFNULL(GROUP_CONCAT(concat(':!\`',table_schema,'\`.\`',table_name,'\`') SEPARATOR ''),'') FROM information_schema.views"
+
+# If ${SKIP_DATABASES} is not empty, create a where chain 
+if [ ! -z "${SKIP_DATABASES}" ]; then
+    VIEW_LIST_SQL="${VIEW_LIST_SQL} WHERE table_schema NOT IN ("
+    # Split on ,
+    SKIP_DATABASES=$(echo -e "${SKIP_DATABASES}" | tr "," "\n")
+    for DB in ${SKIP_DATABASES} ; do
+    VIEW_LIST_SQL="${VIEW_LIST_SQL}'${DB}'," ;
+    done
+    VIEW_LIST_SQL="${VIEW_LIST_SQL: : -1}"
+    VIEW_LIST_SQL="${VIEW_LIST_SQL});"
+else
+    VIEW_LIST_SQL=";"
+fi
+
 # Get result
 VIEWS_LIST=`mysql ${MYSQL_CONN} -ANe"${VIEW_LIST_SQL}"`
 

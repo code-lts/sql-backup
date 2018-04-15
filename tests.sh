@@ -37,8 +37,8 @@ compareFilesOrExit() {
   chk2=`sha1sum $2 | awk -F" " '{print $1}'`
 
   if [ "$chk1" != "$chk2" ]; then
-    fail "Files are not identical"
-    diff "$1" "$2"
+    fail "Files are not identical ($1) ($2)"
+    diff -ia --unified=0 --suppress-common-lines "$1" "$2"
   fi
 
 }
