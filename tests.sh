@@ -50,7 +50,7 @@ testBACKUP_CONFIG_ENVFILE_Success() {
 testBACKUP_Success() {
   preTest
   export BACKUP_CONFIG_ENVFILE="./test/envfile"
-  ./backup.sh 1>/dev/null 2>&1
+  ./backup.sh
   assertEquals 0 "$?"
   unset BACKUP_CONFIG_ENVFILE
   ls ./test/
@@ -58,3 +58,8 @@ testBACKUP_Success() {
 }
 
 . ./shunit2-2.0.3/src/shell/shunit2
+if [ ${__shunit_testsFailed} -eq 0 ]; then
+  exit 0;
+else
+  exit 1;
+fi

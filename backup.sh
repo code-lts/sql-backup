@@ -83,7 +83,7 @@ for DB in $DB_LIST; do # Concat ignore command
     DBS="${DBS} ${DB}"
 done
 
-VIEW_LIST_SQL="SET SESSION group_concat_max_len = 1000000;SELECT GROUP_CONCAT(concat(':!\`',table_schema,'\`.\`',table_name,'\`') SEPARATOR '') FROM information_schema.views"
+VIEW_LIST_SQL="SET SESSION group_concat_max_len = 1000000;SELECT IFNULL(GROUP_CONCAT(concat(':!\`',table_schema,'\`.\`',table_name,'\`') SEPARATOR ''),'') FROM information_schema.views;"
 # Get result
 VIEWS_LIST=`mysql ${MYSQL_CONN} -ANe"${VIEW_LIST_SQL}"`
 
@@ -114,13 +114,6 @@ mysqldump ${MYSQLDUMP_DEFAULTS} --routines=FALSE --triggers=FALSE --events=FALSE
 
 if [ "$?" -ne 0 ]; then
   exitWithMsg 205 "Data dump failed"
-fi
-
-echo "Users ..."
-mysqldump ${MYSQLDUMP_DEFAULTS} mysql --no-create-info --complete-insert --tables user db > ${BACKUP_DIR}/users.sql
-
-if [ "$?" -ne 0 ]; then
-  exitWithMsg 205 "Users dump failed"
 fi
 
 echo "Routines ..."
@@ -168,6 +161,13 @@ sed -i 's/^ *//' ${BACKUP_DIR}/views.sql
 sed -i 's/$/;/' ${BACKUP_DIR}/views.sql
 #Replace double ;; by ;
 sed -i 's/;;/;/' ${BACKUP_DIR}/views.sql
+
+echo "Users ..."
+mysqldump ${MYSQLDUMP_DEFAULTS} mysql --no-create-info --complete-insert --tables user db > ${BACKUP_DIR}/users.sql
+
+if [ "$?" -ne 0 ]; then
+  exitWithMsg 205 "Users dump failed"
+fi
 
 echo "Grants ..."
 # Needs refactor
