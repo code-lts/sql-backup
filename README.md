@@ -1,4 +1,5 @@
 # sql-backup
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/8b72cd7316b745ed838b739cef3ebd38)](https://app.codacy.com/app/williamdes/sql-backup?utm_source=github.com&utm_medium=referral&utm_content=williamdes/sql-backup&utm_campaign=badger)
 [![Maintainability](https://api.codeclimate.com/v1/badges/9af0b964df176436608d/maintainability)](https://codeclimate.com/github/williamdes/sql-backup/maintainability)
 
 [![Build Status](https://travis-ci.org/williamdes/sql-backup.svg?branch=master)](https://travis-ci.org/williamdes/sql-backup)
