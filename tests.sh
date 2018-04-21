@@ -130,7 +130,6 @@ testOnSuccessScript() {
   postTest
 }
 
-. ./shunit2-2.0.3/src/shell/shunit2
 testCompareFail() {
   # Expected fail
   compareFilesSUM "${SCRIPT_ROOT}/.gitignore" "${SCRIPT_ROOT}/samples/empty/events.sql"
