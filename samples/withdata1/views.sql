@@ -1,0 +1,1 @@
+CREATE ALGORITHM=UNDEFINED DEFINER=`testbench`@`%` SQL SECURITY DEFINER VIEW `testbench`.`je te vois` AS select `testbench`.`table hérétique ! @*:`.`ma première colonne` AS `ma première colonne`,`testbench`.`table hérétique ! @*:`.`qui utilise encore du latin sérieux` AS `qui utilise encore du latin sérieux` from `testbench`.`table hérétique ! @*:`;

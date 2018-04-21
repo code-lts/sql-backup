@@ -63,6 +63,14 @@ fillConfigFile() {
   echo "SKIP_DATABASES=mysql,sys,information_schema,performance_schema" >> $1
 }
 
+createTestData() {
+  mysql ${MYSQLCREDS} < ${SCRIPT_ROOT}/samples/$1/create.sql
+}
+
+destroyTestData() {
+  mysql ${MYSQLCREDS} < ${SCRIPT_ROOT}/samples/$1/destroy.sql
+}
+
 preTest() {
   mkdir ./test
   touch ./test/envfile
@@ -94,31 +102,31 @@ testBACKUP_EMPTY_Success() {
 
 testBACKUP_Success_NoDiff() {
   preTest
-  mysql ${MYSQLCREDS} -e "CREATE DATABASE testbench CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;"
+  createTestData "empty"
   ./backup.sh
   assertEquals 0 "$?"
-  mysql ${MYSQLCREDS} -e "DROP DATABASE testbench;"
+  destroyTestData "empty"
   compareFiles "empty"
   postTest
 }
 
 testBACKUP_Success() {
   preTest
-  mysql ${MYSQLCREDS} -e "CREATE DATABASE testbench CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;"
+  createTestData "empty"
   ./backup.sh
   assertEquals 0 "$?"
-  mysql ${MYSQLCREDS} -e "DROP DATABASE testbench;"
+  destroyTestData "empty"
   postTest
 }
 
 testOnSuccessScript() {
   preTest
   echo 'ON_SUCCESS="./postTest.sh"' >> "./test/envfile"
-  mysql ${MYSQLCREDS} -e "CREATE DATABASE testbench CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;"
+  createTestData "empty"
   ./backup.sh
   cat ./test/endfile > /dev/null
   assertEquals 0 "$?"
-  mysql ${MYSQLCREDS} -e "DROP DATABASE testbench;"
+  destroyTestData "empty"
   postTest
 }
 
@@ -128,22 +136,23 @@ testCompareFail() {
   assertEquals 1 "$?"
 }
 
-
-testBACKUP_Success_NoDiff_Strange_BS_Data() {
+testBACKUP_Success_NoDiff_Strange_BS_Data0() {
   preTest
-  mysql ${MYSQLCREDS} -e "CREATE DATABASE testbench CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;"
-  mysql ${MYSQLCREDS} -e 'USE testbench;CREATE TABLE `table hérétique ! @*:` (
-    `ma première colonne` varchar(64) CHARACTER SET utf8mb4 NOT NULL,
-    `qui utilise encore du latin sérieux` varchar(255) CHARACTER SET latin1 COLLATE latin1_general_ci DEFAULT NULL
-  ) ENGINE=InnoDB DEFAULT CHARSET=big5 COMMENT="Une table horrible";'
-  mysql ${MYSQLCREDS} -e 'USE testbench;ALTER TABLE `table hérétique ! @*:` ADD PRIMARY KEY (`ma première colonne`);'
-  mysql ${MYSQLCREDS} -e 'USE testbench;ALTER TABLE `table hérétique ! @*:` ADD INDEX(`qui utilise encore du latin sérieux`);'
-  mysql ${MYSQLCREDS} -e 'USE testbench;ALTER TABLE `table hérétique ! @*:` ADD UNIQUE(`ma première colonne`);'
-  mysql ${MYSQLCREDS} -e 'USE testbench;ALTER TABLE `table hérétique ! @*:` ADD KEY `les cons` (`qui utilise encore du latin sérieux`) USING BTREE;'
+  createTestData "withdata0"
   ./backup.sh
   assertEquals 0 "$?"
-  mysql ${MYSQLCREDS} -e "DROP DATABASE testbench;"
-  compareFiles "withdata"
+  destroyTestData "withdata0"
+  compareFiles "withdata0"
+  postTest
+}
+
+testBACKUP_Success_NoDiff_Strange_BS_Data1() {
+  preTest
+  createTestData "withdata1"
+  ./backup.sh
+  assertEquals 0 "$?"
+  destroyTestData "withdata1"
+  compareFiles "withdata1"
   postTest
 }
 
@@ -154,10 +163,39 @@ testBACKUP_Success_NoDatabases() {
   postTest
 }
 
+testUsers_Fail() {
+  preTest
+  createTestData "withdata0"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/createuser.sql"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToTestBench.sql"
+  echo "MYSQL_USER=grantfail" >> "./test/envfile"
+  ./backup.sh
+  assertEquals 205 "$?"
+  destroyTestData "withdata0"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/deleteuser.sql"
+  postTest
+}
+
+testBACKUP_manualgrant_Success() {
+  preTest
+  createTestData "withdata0"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/createuser.sql"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToTestBench.sql"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToUsers.sql"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToDB.sql"
+  echo "MYSQL_USER=grantfail" >> "./test/envfile"
+  ./backup.sh
+  assertEquals 0 "$?"
+  destroyTestData "withdata0"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/deleteuser.sql"
+  postTest
+}
 
 . ./shunit2-2.1.7/shunit2
+# codecov skip start
 if [ ${__shunit_testsFailed} -eq 0 ]; then
   exit 0;
 else
   exit 1;
 fi
+# codecov skip end
