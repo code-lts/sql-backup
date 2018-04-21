@@ -107,7 +107,7 @@ fi
 VIEWS_LIST=$(mysql ${MYSQL_CONN} -ANe"${VIEW_LIST_SQL}")
 
 if [ "$?" -ne 0 ]; then
-  exitWithMsg 204 "Views listing failed"
+  exitWithMsg 205 "Views listing failed"
 fi
 
 VIEW_IGNORE_ARG=()

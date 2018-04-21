@@ -4,8 +4,8 @@
 # 201 = Value is not a file
 # 202 = Value is not a directory
 # 203 = Missing dependency
-# 204 = A lising failed
-# 205 = Unused
+# 204 = Databases listing failed
+# 205 = Views listing failed
 # 206 = No databases to backup
 # 207 = Structure dump failed
 # 208 = Data dump failed
