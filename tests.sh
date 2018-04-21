@@ -181,7 +181,7 @@ testBACKUP_Success_NoDatabases() {
   postTest
 }
 
-testEvents_Fail() {
+testEvents_NoData_Fail() {
   preTest
   createTestData "withdata0"
   mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/createuser.sql"
@@ -189,7 +189,6 @@ testEvents_Fail() {
   echo "MYSQL_USER=grantfail" >> "./test/envfile"
   mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToUsers.sql"
   mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToDB.sql"
-  echo "MYSQL_USER=grantfail" >> "./test/envfile"
   ./backup.sh
   assertEquals 211 "$?"
   destroyTestData "withdata0"
@@ -241,6 +240,38 @@ testEvents_Fail() {
   mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/deleteuser.sql"
   postTest
 }
+
+testStructure_Fail() {
+  preTest
+  createTestData "withdata2"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/createuser.sql"
+  mysql ${MYSQLCREDS} -ANe "GRANT INSERT, TRIGGER, SHOW VIEW ON testbench.* TO 'grantfail'@'%';"
+  echo "MYSQL_USER=grantfail" >> "./test/envfile"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToUsers.sql"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToDB.sql"
+  echo "MYSQL_USER=grantfail" >> "./test/envfile"
+  ./backup.sh
+  assertEquals 207 "$?"
+  destroyTestData "withdata2"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/deleteuser.sql"
+  postTest
+}
+
+#testData_Fail() {
+#  preTest
+#  createTestData "withdata2"
+#  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/createuser.sql"
+#  mysql ${MYSQLCREDS} -ANe "GRANT INSERT, TRIGGER, SHOW VIEW, ALTER ON testbench.* TO 'grantfail'@'%';"
+#  echo "MYSQL_USER=grantfail" >> "./test/envfile"
+#  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToUsers.sql"
+#  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToDB.sql"
+#  echo "MYSQL_USER=grantfail" >> "./test/envfile"
+#  ./backup.sh
+#  assertEquals 208 "$?"
+#  destroyTestData "withdata2"
+#  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/deleteuser.sql"
+#  postTest
+#}
 
 #testRoutines_Fail() {
 #  preTest
