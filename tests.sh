@@ -31,16 +31,22 @@ compareFiles() {
   compareFilesOrExit "${SCRIPT_ROOT}/samples/$1/routines.sql" "${SCRIPT_ROOT}/test/routines.sql"
 }
 
-compareFilesOrExit() {
+compareFilesSUM() {
 
   chk1="$(sha1sum $1 | awk -F" " '{print $1}')"
   chk2="$(sha1sum $2 | awk -F" " '{print $1}')"
 
-  if [ "$chk1" != "$chk2" ]; then
-    fail "Files are not identical ($1) ($2)"
-    diff -ia --unified=2 --suppress-common-lines "$1" "$2"
+  if [ "$chk1" = "$chk2" ]; then
+    return 0
+  else
+    return 1
   fi
 
+}
+
+compareFilesOrExit() {
+  #diff -ia --unified=2 --suppress-common-lines "$1" "$2"
+  compareFilesSUM "$@" || failNotSame "Files are not identical ($1) ($2)" "$(cat $1)" "$(cat $2)"
 }
 
 testBACKUP_CONFIG_ENVFILE_Fail() {
@@ -125,6 +131,13 @@ testOnSuccessScript() {
 }
 
 . ./shunit2-2.0.3/src/shell/shunit2
+testCompareFail() {
+  # Expected fail
+  compareFilesSUM "${SCRIPT_ROOT}/.gitignore" "${SCRIPT_ROOT}/samples/empty/events.sql"
+  assertEquals 1 "$?"
+}
+
+. ./shunit2-2.1.7/shunit2
 if [ ${__shunit_testsFailed} -eq 0 ]; then
   exit 0;
 else
