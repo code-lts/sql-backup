@@ -164,6 +164,16 @@ testBACKUP_Success_NoDiff_Strange_BS_Data1() {
   postTest
 }
 
+testBACKUP_Success_NoDiff_Strange_BS_Data2() {
+  preTest
+  createTestData "withdata2"
+  ./backup.sh
+  assertEquals 0 "$?"
+  destroyTestData "withdata2"
+  compareFiles "withdata2"
+  postTest
+}
+
 testBACKUP_Success_NoDatabases() {
   preTest
   ./backup.sh
@@ -189,16 +199,16 @@ testEvents_Fail() {
 
 testViews_Fail() {
   preTest
-  createTestData "withdata1"
+  createTestData "withdata2"
   mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/createuser.sql"
-  mysql ${MYSQLCREDS} -ANe "GRANT SELECT, EVENT ON testbench.* TO 'grantfail'@'%';"
+  mysql ${MYSQLCREDS} -ANe "GRANT SELECT, EVENT, TRIGGER ON testbench.* TO 'grantfail'@'%';"
   echo "MYSQL_USER=grantfail" >> "./test/envfile"
   mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToUsers.sql"
   mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToDB.sql"
   echo "MYSQL_USER=grantfail" >> "./test/envfile"
   ./backup.sh
   assertEquals 212 "$?"
-  destroyTestData "withdata1"
+  destroyTestData "withdata2"
   mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/deleteuser.sql"
   postTest
 }
@@ -215,6 +225,55 @@ testUsers_Fail() {
   mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/deleteuser.sql"
   postTest
 }
+
+testEvents_Fail() {
+  preTest
+  createTestData "withdata2"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/createuser.sql"
+  mysql ${MYSQLCREDS} -ANe "GRANT SELECT, TRIGGER, SHOW VIEW ON testbench.* TO 'grantfail'@'%';"
+  echo "MYSQL_USER=grantfail" >> "./test/envfile"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToUsers.sql"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToDB.sql"
+  echo "MYSQL_USER=grantfail" >> "./test/envfile"
+  ./backup.sh
+  assertEquals 211 "$?"
+  destroyTestData "withdata2"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/deleteuser.sql"
+  postTest
+}
+
+#testRoutines_Fail() {
+#  preTest
+#  createTestData "withdata2"
+#  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/createuser.sql"
+#  mysql ${MYSQLCREDS} -ANe "GRANT SELECT, TRIGGER, SHOW VIEW, EVENT ON testbench.* TO 'grantfail'@'%';"
+#  mysql ${MYSQLCREDS} -ANe "CREATE DEFINER=`root`@`%` FUNCTION `procédure de test n°2`(`entrée 1` VARCHAR(35) CHARSET cp1250) RETURNS INT(1) UNSIGNED COMMENT 'procédure de test n°2' NOT DETERMINISTIC NO SQL SQL SECURITY DEFINER RETURN 1;"
+#  echo "MYSQL_USER=grantfail" >> "./test/envfile"
+#  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToUsers.sql"
+#  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToDB.sql"
+#  echo "MYSQL_USER=grantfail" >> "./test/envfile"
+#  ./backup.sh
+#  assertEquals 209 "$?"
+#  destroyTestData "withdata2"
+#  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/deleteuser.sql"
+#  postTest
+#}
+
+#testTriggers_Fail() {
+  #preTest
+  #createTestData "withdata2"
+  #mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/createuser.sql"
+  #mysql ${MYSQLCREDS} -ANe "GRANT SELECT, EVENT, SHOW VIEW ON testbench.* TO 'grantfail'@'%';"
+  #echo "MYSQL_USER=grantfail" >> "./test/envfile"
+  #mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToUsers.sql"
+  #mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToDB.sql"
+  #echo "MYSQL_USER=grantfail" >> "./test/envfile"
+  #./backup.sh
+  #assertEquals 210 "$?"
+  #destroyTestData "withdata2"
+  #mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/deleteuser.sql"
+  #postTest
+#}
 
 testBACKUP_manualgrant_Success() {
   preTest
