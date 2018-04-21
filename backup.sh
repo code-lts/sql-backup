@@ -60,7 +60,7 @@ MYSQLDUMP_DEFAULTS="${MYSQL_CONN} ${EXPERT_ARGS}"
 
 DB_LIST_SQL="SELECT schema_name FROM information_schema.schemata"
 
-# If ${SKIP_DATABASES} is not empty, create a where chain 
+# If ${SKIP_DATABASES} is not empty, create a where chain
 if [ ! -z "${SKIP_DATABASES}" ]; then
     DB_LIST_SQL="${DB_LIST_SQL} WHERE schema_name NOT IN ("
     # Split on ,
@@ -73,7 +73,7 @@ if [ ! -z "${SKIP_DATABASES}" ]; then
 fi
 #    echo -e "${DB_LIST_SQL}"
 # Get result
-DB_LIST=`mysql ${MYSQL_CONN} -ANe"${DB_LIST_SQL}"`
+DB_LIST=$(mysql ${MYSQL_CONN} -ANe"${DB_LIST_SQL}")
 
 if [ "$?" -ne 0 ]; then
   exitWithMsg 204 "Databases listing failed"
@@ -89,7 +89,7 @@ done
 
 VIEW_LIST_SQL="SET SESSION group_concat_max_len = 1000000;SELECT IFNULL(GROUP_CONCAT(concat(':!\`',table_schema,'\`.\`',table_name,'\`') SEPARATOR ''),'') FROM information_schema.views"
 
-# If ${SKIP_DATABASES} is not empty, create a where chain 
+# If ${SKIP_DATABASES} is not empty, create a where chain
 if [ ! -z "${SKIP_DATABASES}" ]; then
     VIEW_LIST_SQL="${VIEW_LIST_SQL} WHERE table_schema NOT IN ("
     # Split on ,
@@ -104,7 +104,7 @@ else
 fi
 
 # Get result
-VIEWS_LIST=`mysql ${MYSQL_CONN} -ANe"${VIEW_LIST_SQL}"`
+VIEWS_LIST=$(mysql ${MYSQL_CONN} -ANe"${VIEW_LIST_SQL}")
 
 if [ "$?" -ne 0 ]; then
   exitWithMsg 204 "Views listing failed"
@@ -191,7 +191,7 @@ fi
 echo "Grants ..."
 # Needs refactor
 GRANTS_SQL="select distinct concat( \"SHOW GRANTS FOR '\",user,\"'@'\",host,\"';\" ) from mysql.user WHERE user != 'root';"
-GRANTS_LIST=`mysql ${MYSQL_CONN} -ANe"${GRANTS_SQL}"`
+GRANTS_LIST=$(mysql ${MYSQL_CONN} -ANe"${GRANTS_SQL}")
 echo ${GRANTS_LIST} | mysql --default-character-set=utf8 --skip-comments ${MYSQL_CONN} | sed 's/\(GRANT .*\)/\1;/;s/^\(Grants for .*\)/-- \1 --/;/--/{x;p;x;}' > ${BACKUP_DIR}/grants.sql
 
 if [ "$?" -ne 0 ]; then
