@@ -11,7 +11,7 @@
 MYSQL_HOST="localhost"
 MYSQL_USER="root"
 MYSQL_PASS="testbench"
-SCRIPT_ROOT=`dirname $0`
+SCRIPT_ROOT="$(dirname $0)"
 echo "SCRIPT_ROOT=${SCRIPT_ROOT}"
 MYSQLCREDS="-h${MYSQL_HOST} -u${MYSQL_USER} -p${MYSQL_PASS}"
 
@@ -33,8 +33,8 @@ compareFiles() {
 
 compareFilesOrExit() {
 
-  chk1=`sha1sum $1 | awk -F" " '{print $1}'`
-  chk2=`sha1sum $2 | awk -F" " '{print $1}'`
+  chk1="$(sha1sum $1 | awk -F" " '{print $1}')"
+  chk2="$(sha1sum $2 | awk -F" " '{print $1}')"
 
   if [ "$chk1" != "$chk2" ]; then
     fail "Files are not identical ($1) ($2)"
@@ -60,7 +60,7 @@ fillConfigFile() {
 preTest() {
   mkdir ./test
   touch ./test/envfile
-  echo "BACKUP_DIR=${SCRIPT_ROOT}/test/" > ./test/envfile
+  echo "BACKUP_DIR=${SCRIPT_ROOT}/test" > ./test/envfile
   fillConfigFile ./test/envfile
 }
 
@@ -88,7 +88,7 @@ testBACKUP_EMPTY_Success() {
   postTest
 }
 
-testBACKUP_Success() {
+testBACKUP_Success_NoDiff() {
   preTest
   export BACKUP_CONFIG_ENVFILE="./test/envfile"
   mysql ${MYSQLCREDS} -e "CREATE DATABASE testbench CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;"
@@ -96,6 +96,30 @@ testBACKUP_Success() {
   assertEquals 0 "$?"
   mysql ${MYSQLCREDS} -e "DROP DATABASE testbench;"
   compareFiles "empty"
+  unset BACKUP_CONFIG_ENVFILE
+  postTest
+}
+
+testBACKUP_Success() {
+  preTest
+  export BACKUP_CONFIG_ENVFILE="./test/envfile"
+  mysql ${MYSQLCREDS} -e "CREATE DATABASE testbench CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;"
+  ./backup.sh
+  assertEquals 0 "$?"
+  mysql ${MYSQLCREDS} -e "DROP DATABASE testbench;"
+  unset BACKUP_CONFIG_ENVFILE
+  postTest
+}
+
+testOnSuccessScript() {
+  preTest
+  export BACKUP_CONFIG_ENVFILE="./test/envfile"
+  echo 'ON_SUCCESS="./postTest.sh"' >> "./test/envfile"
+  mysql ${MYSQLCREDS} -e "CREATE DATABASE testbench CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;"
+  ./backup.sh
+  cat ./test/endfile > /dev/null
+  assertEquals 0 "$?"
+  mysql ${MYSQLCREDS} -e "DROP DATABASE testbench;"
   unset BACKUP_CONFIG_ENVFILE
   postTest
 }

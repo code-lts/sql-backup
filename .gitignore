@@ -2,3 +2,5 @@
 *.sql
 shunit*
 !samples/**/*
+coverage/*
+!coverage/.gitkeep

@@ -205,6 +205,6 @@ sed -i -e 's/\\\\//g' ${BACKUP_DIR}/grants.sql
 echo "Backup done !"
 
 if [ ! -z "${ON_SUCCESS}" ]; then
-  `echo ${ON_SUCCESS}`
+  echo "$(${ON_SUCCESS})"
 fi
 exit 0
