@@ -5,8 +5,16 @@
 # 202 = Value is not a directory
 # 203 = Missing dependency
 # 204 = A lising failed
-# 205 = A dump failed
+# 205 = Unused
 # 206 = No databases to backup
+# 207 = Structure dump failed
+# 208 = Data dump failed
+# 209 = Routines dump failed
+# 210 = Triggers dump failed
+# 211 = Events dump failed
+# 212 = Views dump failed
+# 213 = Users dump failed
+# 214 = Grants dump failed
 
 MYSQL_HOST="localhost"
 MYSQL_USER="root"
@@ -163,6 +171,38 @@ testBACKUP_Success_NoDatabases() {
   postTest
 }
 
+testEvents_Fail() {
+  preTest
+  createTestData "withdata0"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/createuser.sql"
+  mysql ${MYSQLCREDS} -ANe "GRANT SELECT ON testbench.* TO 'grantfail'@'%';"
+  echo "MYSQL_USER=grantfail" >> "./test/envfile"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToUsers.sql"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToDB.sql"
+  echo "MYSQL_USER=grantfail" >> "./test/envfile"
+  ./backup.sh
+  assertEquals 211 "$?"
+  destroyTestData "withdata0"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/deleteuser.sql"
+  postTest
+}
+
+testViews_Fail() {
+  preTest
+  createTestData "withdata1"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/createuser.sql"
+  mysql ${MYSQLCREDS} -ANe "GRANT SELECT, EVENT ON testbench.* TO 'grantfail'@'%';"
+  echo "MYSQL_USER=grantfail" >> "./test/envfile"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToUsers.sql"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToDB.sql"
+  echo "MYSQL_USER=grantfail" >> "./test/envfile"
+  ./backup.sh
+  assertEquals 212 "$?"
+  destroyTestData "withdata1"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/deleteuser.sql"
+  postTest
+}
+
 testUsers_Fail() {
   preTest
   createTestData "withdata0"
@@ -170,7 +210,7 @@ testUsers_Fail() {
   mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToTestBench.sql"
   echo "MYSQL_USER=grantfail" >> "./test/envfile"
   ./backup.sh
-  assertEquals 205 "$?"
+  assertEquals 213 "$?"
   destroyTestData "withdata0"
   mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/deleteuser.sql"
   postTest
@@ -192,10 +232,3 @@ testBACKUP_manualgrant_Success() {
 }
 
 . ./shunit2-2.1.7/shunit2
-# codecov skip start
-if [ ${__shunit_testsFailed} -eq 0 ]; then
-  exit 0;
-else
-  exit 1;
-fi
-# codecov skip end
