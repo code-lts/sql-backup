@@ -1,0 +1,1 @@
+CREATE USER 'grantfail'@'%' IDENTIFIED BY 'testbench';

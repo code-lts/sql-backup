@@ -34,9 +34,8 @@ before_script: |
 before_install:
   - sudo mysql -e "use mysql; update user set authentication_string=PASSWORD('testbench'), host='%', password_last_changed=FROM_UNIXTIME(1523829600) where User='root'; update user set plugin='mysql_native_password'; delete from user where User != 'root' OR host != '%'; delete from user where User = 'sys'; FLUSH PRIVILEGES;"
   - sudo service mysql restart
-  - "[ -f shunit2-2.0.3.tgz ] || wget http://downloads.sourceforge.net/shunit2/shunit2-2.0.3.tgz -O shunit2-2.0.3.tgz"
-  - tar zxf shunit2-2.0.3.tgz && rm shunit2-2.0.3.tgz
-  - chmod +x ./shunit2-2.0.3/src/shell/shunit2
+  - wget https://github.com/kward/shunit2/archive/v2.1.7.tar.gz -O shunit2-2.1.7.tar.gz && tar zxf shunit2-2.1.7.tar.gz && rm shunit2-2.1.7.tar.gz
+  - chmod +x ./shunit2-2.1.7/shunit2
 
 script:
     - kcov --include-pattern=backup.sh,tests.sh --exclude-pattern=coverage coverage ./tests.sh

@@ -95,7 +95,7 @@ if [ ! -z "${SKIP_DATABASES}" ]; then
     # Split on ,
     SKIP_DATABASES=$(echo -e "${SKIP_DATABASES}" | tr "," "\n")
     for DB in ${SKIP_DATABASES} ; do
-    VIEW_LIST_SQL="${VIEW_LIST_SQL}'${DB}'," ;
+      VIEW_LIST_SQL="${VIEW_LIST_SQL}'${DB}'," ;
     done
     VIEW_LIST_SQL="${VIEW_LIST_SQL: : -1}"
     VIEW_LIST_SQL="${VIEW_LIST_SQL});"
@@ -107,65 +107,73 @@ fi
 VIEWS_LIST=$(mysql ${MYSQL_CONN} -ANe"${VIEW_LIST_SQL}")
 
 if [ "$?" -ne 0 ]; then
-  exitWithMsg 204 "Views listing failed"
+  exitWithMsg 205 "Views listing failed"
 fi
 
-VIEW_IGNORE_ARG=""
+VIEW_IGNORE_ARG=()
 # Split on :!
 VIEWS=$(echo -e "${VIEWS_LIST}" | tr ":!" "\n")
+# echo -e "${VIEWS}"
 
+oldIFS=$IFS
+IFS=$'\n'
 for VIEW in $VIEWS; do # Concat ignore command
-    VIEW_IGNORE_ARG="${VIEW_IGNORE_ARG} --ignore-table=${VIEW}"
+  # Replace ` in ${VIEW}, does not work with ` for --ignore-table
+  VIEW="${VIEW//\`/}"
+  #VIEW=$(printf '%q' "${VIEW}")
+  VIEW_IGNORE_ARG+=(--ignore-table=${VIEW} )
 done
-# Replace ` in ${VIEW_IGNORE_ARG}, does not work with ` in table/database names
-VIEW_IGNORE_ARG=${VIEW_IGNORE_ARG//\`/}
-# echo -e "${VIEW_IGNORE_ARG}"
-
+IFS=$oldIFS
+# echo "${VIEW_IGNORE_ARG[@]}";
 echo "Structure..."
-mysqldump ${MYSQLDUMP_DEFAULTS} --routines=FALSE --triggers=FALSE --events=FALSE --no-data ${VIEW_IGNORE_ARG} --databases ${DBS} > ${BACKUP_DIR}/structure.sql
+mysqldump ${MYSQLDUMP_DEFAULTS} --skip-add-drop-table --routines=FALSE --triggers=FALSE --events=FALSE --no-data "${VIEW_IGNORE_ARG[@]}" --databases ${DBS} > ${BACKUP_DIR}/structure.sql
 
 if [ "$?" -ne 0 ]; then
-  exitWithMsg 205 "Structure dump failed"
+  exitWithMsg 207 "Structure dump failed"
 fi
 
 echo "Data ..."
-mysqldump ${MYSQLDUMP_DEFAULTS} --routines=FALSE --triggers=FALSE --events=FALSE --no-create-info ${VIEW_IGNORE_ARG} --databases ${DBS} > ${BACKUP_DIR}/database.sql
+mysqldump ${MYSQLDUMP_DEFAULTS} --routines=FALSE --triggers=FALSE --events=FALSE --no-create-info "${VIEW_IGNORE_ARG[@]}" --databases ${DBS} > ${BACKUP_DIR}/database.sql
 
 if [ "$?" -ne 0 ]; then
-  exitWithMsg 205 "Data dump failed"
+  exitWithMsg 208 "Data dump failed"
 fi
 
 echo "Routines ..."
 mysqldump ${MYSQLDUMP_DEFAULTS} --routines=TRUE --triggers=FALSE --events=FALSE --no-create-info --no-data --no-create-db --databases ${DBS} > ${BACKUP_DIR}/routines.sql
 
 if [ "$?" -ne 0 ]; then
-  exitWithMsg 205 "Routines dump failed"
+  exitWithMsg 209 "Routines dump failed"
 fi
 
 echo "Triggers ..."
 mysqldump ${MYSQLDUMP_DEFAULTS} --routines=FALSE --triggers=TRUE --events=FALSE --no-create-info --no-data --no-create-db --databases ${DBS} > ${BACKUP_DIR}/triggers.sql
 
 if [ "$?" -ne 0 ]; then
-  exitWithMsg 205 "Triggers dump failed"
+  exitWithMsg 210 "Triggers dump failed"
 fi
 
 echo "Events ..."
 mysqldump ${MYSQLDUMP_DEFAULTS} --routines=FALSE --triggers=FALSE --events=TRUE --no-create-info --no-data --no-create-db --databases ${DBS} > ${BACKUP_DIR}/events.sql
 
 if [ "$?" -ne 0 ]; then
-  exitWithMsg 205 "Events dump failed"
+  exitWithMsg 211 "Events dump failed"
 fi
 
 echo "Views ..."
 VIEWS_SHOW_SQL=""
+oldIFS=$IFS
+IFS=$'\n'
 for VIEW in $VIEWS; do # Concat SHOW CREATE VIEW command
     VIEWS_SHOW_SQL="${VIEWS_SHOW_SQL}SHOW CREATE VIEW ${VIEW};"
 done
+IFS=$oldIFS
+
 # echo -e "${VIEWS_SHOW_SQL}"
 echo ${VIEWS_SHOW_SQL} | sed 's/;/\\G/g' | mysql ${MYSQL_CONN} > ${BACKUP_DIR}/views.sql
 
 if [ "$?" -ne 0 ]; then
-  exitWithMsg 205 "Views dump failed"
+  exitWithMsg 212 "Views dump failed"
 fi
 
 #Keeps lines starting with Create
@@ -185,7 +193,7 @@ echo "Users ..."
 mysqldump ${MYSQLDUMP_DEFAULTS} mysql --no-create-info --complete-insert --tables user db > ${BACKUP_DIR}/users.sql
 
 if [ "$?" -ne 0 ]; then
-  exitWithMsg 205 "Users dump failed"
+  exitWithMsg 213 "Users dump failed"
 fi
 
 echo "Grants ..."
@@ -195,7 +203,7 @@ GRANTS_LIST=$(mysql ${MYSQL_CONN} -ANe"${GRANTS_SQL}")
 echo ${GRANTS_LIST} | mysql --default-character-set=utf8 --skip-comments ${MYSQL_CONN} | sed 's/\(GRANT .*\)/\1;/;s/^\(Grants for .*\)/-- \1 --/;/--/{x;p;x;}' > ${BACKUP_DIR}/grants.sql
 
 if [ "$?" -ne 0 ]; then
-  exitWithMsg 205 "Grants dump failed"
+  exitWithMsg 214 "Grants dump failed"
 fi
 
 # Removes double backslashes >  \\
