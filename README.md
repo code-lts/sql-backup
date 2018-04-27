@@ -4,7 +4,7 @@
 [![codecov](https://codecov.io/gh/williamdes/sql-backup/branch/master/graph/badge.svg)](https://codecov.io/gh/williamdes/sql-backup)
 [![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)](http://unlicense.org/)
 
-Backup your MySQL / MariaDB server ( data, users, grants, views, triggers, routines, events )
+Backup your MySQL / MariaDB server ( structure, data, users, grants, views, triggers, routines, events )
 
 ## Install
 
@@ -20,12 +20,14 @@ cp .env-example .env
 ```bash
 nano .env
 ```
-or  
+or
+
 ```bash
 vi .env
 
 ```
-then  
+then
+
 ```
 ./backup.sh
 ```
@@ -39,11 +41,12 @@ export BACKUP_CONFIG_ENVFILE="/home/myuser/secretbackupconfig.env.txt"
 ./backup.sh
 
 unset BACKUP_CONFIG_ENVFILE
-```   
-You can use the variables of the env file in the `ON_SUCCESS` variable, example :   
+```
+You can use the variables of the env file in the `ON_SUCCESS` variable, example :
+
 ```bash
 ON_SUCCESS="${BACKUP_DIR}/onsuccessscript.sh"
-```   
+```
 
 
 ## Options
@@ -57,6 +60,7 @@ ON_SUCCESS="${BACKUP_DIR}/onsuccessscript.sh"
 | SKIP_DATABASES 	|                                                                                                                                	| YES      	|
 | EXPERT_ARGS    	| --default-character-set=utf8 --extended-insert=FALSE --single-transaction --skip-comments --skip-dump-date --hex-blob --tz-utc 	| YES      	|
 | ON_SUCCESS     	|                                                                                                                                	| YES      	|
+| SKIP_OP        	|                                                                                                                                	| YES      	|
 
 > ON_SUCCESS is called on script success
 
@@ -68,6 +72,7 @@ MYSQL_HOST=localhost
 MYSQL_USER=root
 MYSQL_PASS=root
 SKIP_DATABASES=mysql,sys,information_schema,performance_schema,phpmyadmin
+SKIP_OP=users,grants
 ```
 
 ## Files

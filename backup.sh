@@ -5,6 +5,15 @@ exitWithMsg() {
   exit $1
 }
 
+hasSkip() {
+  for e in "${SKIP_OP[@]}"; do
+    if [ "$e" == "$1" ]; then
+      return 1
+    fi
+  done
+  return 0
+}
+
 # from : github:builtinnya/dotenv-shell-loader
 DOTENV_SHELL_LOADER_SAVED_OPTS=$(set +o)
 set -o allexport
@@ -45,6 +54,18 @@ if [ -z "${MYSQL_USER}" ]; then
     exitWithMsg 200 "Empty Variable MYSQL_USER"
 fi
 
+if [ -z "${SKIP_OP}" ]; then
+    SKIP_OP=()
+else
+  SKIP_OPS=$(echo -e "${SKIP_OP}" | tr "," "\n")
+  SKIP_OP=()
+  oldIFS=$IFS
+  IFS=$'\n'
+  for SKIP in $SKIP_OPS; do
+    SKIP_OP+=(${SKIP} )
+  done
+  IFS=$oldIFS
+fi
 
 MYSQL_CONN="-h${MYSQL_HOST} -u${MYSQL_USER}"
 
@@ -87,128 +108,156 @@ for DB in $DB_LIST; do # Concat ignore command
     DBS="${DBS} ${DB}"
 done
 
-VIEW_LIST_SQL="SET SESSION group_concat_max_len = 1000000;SELECT IFNULL(GROUP_CONCAT(concat(':!\`',table_schema,'\`.\`',table_name,'\`') SEPARATOR ''),'') FROM information_schema.views"
+hasSkip "views"
+if [ "$?" -eq 0 ]; then
+  VIEW_LIST_SQL="SET SESSION group_concat_max_len = 1000000;SELECT IFNULL(GROUP_CONCAT(concat(':!\`',table_schema,'\`.\`',table_name,'\`') SEPARATOR ''),'') FROM information_schema.views"
 
-# If ${SKIP_DATABASES} is not empty, create a where chain
-if [ ! -z "${SKIP_DATABASES}" ]; then
-    VIEW_LIST_SQL="${VIEW_LIST_SQL} WHERE table_schema NOT IN ("
-    # Split on ,
-    SKIP_DATABASES=$(echo -e "${SKIP_DATABASES}" | tr "," "\n")
-    for DB in ${SKIP_DATABASES} ; do
-      VIEW_LIST_SQL="${VIEW_LIST_SQL}'${DB}'," ;
-    done
-    VIEW_LIST_SQL="${VIEW_LIST_SQL: : -1}"
-    VIEW_LIST_SQL="${VIEW_LIST_SQL});"
-else
-    VIEW_LIST_SQL=";"
+  # If ${SKIP_DATABASES} is not empty, create a where chain
+  if [ ! -z "${SKIP_DATABASES}" ]; then
+      VIEW_LIST_SQL="${VIEW_LIST_SQL} WHERE table_schema NOT IN ("
+      # Split on ,
+      SKIP_DATABASES=$(echo -e "${SKIP_DATABASES}" | tr "," "\n")
+      for DB in ${SKIP_DATABASES} ; do
+        VIEW_LIST_SQL="${VIEW_LIST_SQL}'${DB}'," ;
+      done
+      VIEW_LIST_SQL="${VIEW_LIST_SQL: : -1}"
+      VIEW_LIST_SQL="${VIEW_LIST_SQL});"
+  else
+      VIEW_LIST_SQL=";"
+  fi
+
+  # Get result
+  VIEWS_LIST=$(mysql ${MYSQL_CONN} -ANe"${VIEW_LIST_SQL}")
+
+  if [ "$?" -ne 0 ]; then
+    exitWithMsg 205 "Views listing failed"
+  fi
+
+  VIEW_IGNORE_ARG=()
+  # Split on :!
+  VIEWS=$(echo -e "${VIEWS_LIST}" | tr ":!" "\n")
+  # echo -e "${VIEWS}"
+
+  oldIFS=$IFS
+  IFS=$'\n'
+  for VIEW in $VIEWS; do # Concat ignore command
+    # Replace ` in ${VIEW}, does not work with ` for --ignore-table
+    VIEW="${VIEW//\`/}"
+    #VIEW=$(printf '%q' "${VIEW}")
+    VIEW_IGNORE_ARG+=(--ignore-table=${VIEW} )
+  done
+  IFS=$oldIFS
+  # echo "${VIEW_IGNORE_ARG[@]}";
 fi
 
-# Get result
-VIEWS_LIST=$(mysql ${MYSQL_CONN} -ANe"${VIEW_LIST_SQL}")
+hasSkip "structure"
+if [ "$?" -eq 0 ]; then
+  echo "Structure..."
+  mysqldump ${MYSQLDUMP_DEFAULTS} --skip-add-drop-table --routines=FALSE --triggers=FALSE --events=FALSE --no-data "${VIEW_IGNORE_ARG[@]}" --databases ${DBS} > ${BACKUP_DIR}/structure.sql
 
-if [ "$?" -ne 0 ]; then
-  exitWithMsg 205 "Views listing failed"
+  if [ "$?" -ne 0 ]; then
+    exitWithMsg 207 "Structure dump failed"
+  fi
 fi
 
-VIEW_IGNORE_ARG=()
-# Split on :!
-VIEWS=$(echo -e "${VIEWS_LIST}" | tr ":!" "\n")
-# echo -e "${VIEWS}"
+hasSkip "data"
+if [ "$?" -eq 0 ]; then
+  echo "Data ..."
+  mysqldump ${MYSQLDUMP_DEFAULTS} --routines=FALSE --triggers=FALSE --events=FALSE --no-create-info "${VIEW_IGNORE_ARG[@]}" --databases ${DBS} > ${BACKUP_DIR}/database.sql
 
-oldIFS=$IFS
-IFS=$'\n'
-for VIEW in $VIEWS; do # Concat ignore command
-  # Replace ` in ${VIEW}, does not work with ` for --ignore-table
-  VIEW="${VIEW//\`/}"
-  #VIEW=$(printf '%q' "${VIEW}")
-  VIEW_IGNORE_ARG+=(--ignore-table=${VIEW} )
-done
-IFS=$oldIFS
-# echo "${VIEW_IGNORE_ARG[@]}";
-echo "Structure..."
-mysqldump ${MYSQLDUMP_DEFAULTS} --skip-add-drop-table --routines=FALSE --triggers=FALSE --events=FALSE --no-data "${VIEW_IGNORE_ARG[@]}" --databases ${DBS} > ${BACKUP_DIR}/structure.sql
-
-if [ "$?" -ne 0 ]; then
-  exitWithMsg 207 "Structure dump failed"
+  if [ "$?" -ne 0 ]; then
+    exitWithMsg 208 "Data dump failed"
+  fi
 fi
 
-echo "Data ..."
-mysqldump ${MYSQLDUMP_DEFAULTS} --routines=FALSE --triggers=FALSE --events=FALSE --no-create-info "${VIEW_IGNORE_ARG[@]}" --databases ${DBS} > ${BACKUP_DIR}/database.sql
+hasSkip "routines"
+if [ "$?" -eq 0 ]; then
+  echo "Routines ..."
+  mysqldump ${MYSQLDUMP_DEFAULTS} --routines=TRUE --triggers=FALSE --events=FALSE --no-create-info --no-data --no-create-db --databases ${DBS} > ${BACKUP_DIR}/routines.sql
 
-if [ "$?" -ne 0 ]; then
-  exitWithMsg 208 "Data dump failed"
+  if [ "$?" -ne 0 ]; then
+    exitWithMsg 209 "Routines dump failed"
+  fi
 fi
 
-echo "Routines ..."
-mysqldump ${MYSQLDUMP_DEFAULTS} --routines=TRUE --triggers=FALSE --events=FALSE --no-create-info --no-data --no-create-db --databases ${DBS} > ${BACKUP_DIR}/routines.sql
+hasSkip "triggers"
+if [ "$?" -eq 0 ]; then
+  echo "Triggers ..."
+  mysqldump ${MYSQLDUMP_DEFAULTS} --routines=FALSE --triggers=TRUE --events=FALSE --no-create-info --no-data --no-create-db --databases ${DBS} > ${BACKUP_DIR}/triggers.sql
 
-if [ "$?" -ne 0 ]; then
-  exitWithMsg 209 "Routines dump failed"
+  if [ "$?" -ne 0 ]; then
+    exitWithMsg 210 "Triggers dump failed"
+  fi
 fi
 
-echo "Triggers ..."
-mysqldump ${MYSQLDUMP_DEFAULTS} --routines=FALSE --triggers=TRUE --events=FALSE --no-create-info --no-data --no-create-db --databases ${DBS} > ${BACKUP_DIR}/triggers.sql
+hasSkip "events"
+  if [ "$?" -eq 0 ]; then
+  echo "Events ..."
+  mysqldump ${MYSQLDUMP_DEFAULTS} --routines=FALSE --triggers=FALSE --events=TRUE --no-create-info --no-data --no-create-db --databases ${DBS} > ${BACKUP_DIR}/events.sql
 
-if [ "$?" -ne 0 ]; then
-  exitWithMsg 210 "Triggers dump failed"
+  if [ "$?" -ne 0 ]; then
+    exitWithMsg 211 "Events dump failed"
+  fi
 fi
 
-echo "Events ..."
-mysqldump ${MYSQLDUMP_DEFAULTS} --routines=FALSE --triggers=FALSE --events=TRUE --no-create-info --no-data --no-create-db --databases ${DBS} > ${BACKUP_DIR}/events.sql
+hasSkip "views"
+if [ "$?" -eq 0 ]; then
+  echo "Views ..."
+  VIEWS_SHOW_SQL=""
+  oldIFS=$IFS
+  IFS=$'\n'
+  for VIEW in $VIEWS; do # Concat SHOW CREATE VIEW command
+      VIEWS_SHOW_SQL="${VIEWS_SHOW_SQL}SHOW CREATE VIEW ${VIEW};"
+  done
+  IFS=$oldIFS
 
-if [ "$?" -ne 0 ]; then
-  exitWithMsg 211 "Events dump failed"
+  # echo -e "${VIEWS_SHOW_SQL}"
+  echo ${VIEWS_SHOW_SQL} | sed 's/;/\\G/g' | mysql ${MYSQL_CONN} > ${BACKUP_DIR}/views.sql
+
+  if [ "$?" -ne 0 ]; then
+    exitWithMsg 212 "Views dump failed"
+  fi
+
+  #Keeps lines starting with Create
+  sed -i '/Create/!d' ${BACKUP_DIR}/views.sql
+  # Removes 'Create View'
+  sed -i -e 's/Create\ View://g' ${BACKUP_DIR}/views.sql
+  #add ; at lines end
+  sed -i 's/)$/);/' ${BACKUP_DIR}/views.sql
+  #Remove spaces before start of line
+  sed -i 's/^ *//' ${BACKUP_DIR}/views.sql
+  #Add ; at line end
+  sed -i 's/$/;/' ${BACKUP_DIR}/views.sql
+  #Replace double ;; by ;
+  sed -i 's/;;/;/' ${BACKUP_DIR}/views.sql
 fi
 
-echo "Views ..."
-VIEWS_SHOW_SQL=""
-oldIFS=$IFS
-IFS=$'\n'
-for VIEW in $VIEWS; do # Concat SHOW CREATE VIEW command
-    VIEWS_SHOW_SQL="${VIEWS_SHOW_SQL}SHOW CREATE VIEW ${VIEW};"
-done
-IFS=$oldIFS
+hasSkip "users"
+if [ "$?" -eq 0 ]; then
+  echo "Users ..."
+  mysqldump ${MYSQLDUMP_DEFAULTS} mysql --no-create-info --complete-insert --tables user db > ${BACKUP_DIR}/users.sql
 
-# echo -e "${VIEWS_SHOW_SQL}"
-echo ${VIEWS_SHOW_SQL} | sed 's/;/\\G/g' | mysql ${MYSQL_CONN} > ${BACKUP_DIR}/views.sql
-
-if [ "$?" -ne 0 ]; then
-  exitWithMsg 212 "Views dump failed"
+  if [ "$?" -ne 0 ]; then
+    exitWithMsg 213 "Users dump failed"
+  fi
 fi
 
-#Keeps lines starting with Create
-sed -i '/Create/!d' ${BACKUP_DIR}/views.sql
-# Removes 'Create View'
-sed -i -e 's/Create\ View://g' ${BACKUP_DIR}/views.sql
-#add ; at lines end
-sed -i 's/)$/);/' ${BACKUP_DIR}/views.sql
-#Remove spaces before start of line
-sed -i 's/^ *//' ${BACKUP_DIR}/views.sql
-#Add ; at line end
-sed -i 's/$/;/' ${BACKUP_DIR}/views.sql
-#Replace double ;; by ;
-sed -i 's/;;/;/' ${BACKUP_DIR}/views.sql
+hasSkip "grants"
+if [ "$?" -eq 0 ]; then
+  echo "Grants ..."
+  # Needs refactor
+  GRANTS_SQL="select distinct concat( \"SHOW GRANTS FOR '\",user,\"'@'\",host,\"';\" ) from mysql.user WHERE user != 'root';"
+  GRANTS_LIST=$(mysql ${MYSQL_CONN} -ANe"${GRANTS_SQL}")
+  echo ${GRANTS_LIST} | mysql --default-character-set=utf8 --skip-comments ${MYSQL_CONN} | sed 's/\(GRANT .*\)/\1;/;s/^\(Grants for .*\)/-- \1 --/;/--/{x;p;x;}' > ${BACKUP_DIR}/grants.sql
 
-echo "Users ..."
-mysqldump ${MYSQLDUMP_DEFAULTS} mysql --no-create-info --complete-insert --tables user db > ${BACKUP_DIR}/users.sql
-
-if [ "$?" -ne 0 ]; then
-  exitWithMsg 213 "Users dump failed"
+  if [ "$?" -ne 0 ]; then
+    exitWithMsg 214 "Grants dump failed"
+  fi
+  # Removes double backslashes >  \\
+  sed -i -e 's/\\\\//g' ${BACKUP_DIR}/grants.sql
+  # echo -e ${GRANTS_SQL}
 fi
 
-echo "Grants ..."
-# Needs refactor
-GRANTS_SQL="select distinct concat( \"SHOW GRANTS FOR '\",user,\"'@'\",host,\"';\" ) from mysql.user WHERE user != 'root';"
-GRANTS_LIST=$(mysql ${MYSQL_CONN} -ANe"${GRANTS_SQL}")
-echo ${GRANTS_LIST} | mysql --default-character-set=utf8 --skip-comments ${MYSQL_CONN} | sed 's/\(GRANT .*\)/\1;/;s/^\(Grants for .*\)/-- \1 --/;/--/{x;p;x;}' > ${BACKUP_DIR}/grants.sql
-
-if [ "$?" -ne 0 ]; then
-  exitWithMsg 214 "Grants dump failed"
-fi
-
-# Removes double backslashes >  \\
-sed -i -e 's/\\\\//g' ${BACKUP_DIR}/grants.sql
-# echo -e ${GRANTS_SQL}
 
 echo "Backup done !"
 
