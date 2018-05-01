@@ -3,6 +3,7 @@
 [![Build Status](https://travis-ci.org/williamdes/sql-backup.svg?branch=master)](https://travis-ci.org/williamdes/sql-backup)
 [![codecov](https://codecov.io/gh/williamdes/sql-backup/branch/master/graph/badge.svg)](https://codecov.io/gh/williamdes/sql-backup)
 [![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)](http://unlicense.org/)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fwilliamdes%2Fsql-backup.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fwilliamdes%2Fsql-backup?ref=badge_shield)
 
 Backup your MySQL / MariaDB server ( structure, data, users, grants, views, triggers, routines, events )
 
@@ -87,3 +88,7 @@ SKIP_OP=users,grants
 | triggers.sql  	| The triggers                              	|
 | routines.sql  	| All the procedures & functions            	|
 | users.sql     	| All MySQL users                           	|
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fwilliamdes%2Fsql-backup.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fwilliamdes%2Fsql-backup?ref=badge_large)
