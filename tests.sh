@@ -343,20 +343,20 @@ testGrantsList_Fail() {
   postTest
 }
 
-testGrants_Fail() {
-  preTest
-  createTestData "withdata2"
-  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/withdata2/createuser.sql"
-  mysql ${MYSQLCREDS} -ANe "GRANT INSERT ON testbench.* TO 'userwd2gf'@'%';"
-  echo "MYSQL_USER=userwd2gf" >> "./test/envfile"
-  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/withdata2/grantToUsers.sql"
-  echo "SKIP_OP=structure,data,routines,events,triggers,users,views" >> "./test/envfile"
-  ./backup.sh
-  assertEquals 214 "$?"
-  destroyTestData "withdata2"
-  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/withdata2/deleteuser.sql"
-  postTest
-}
+#testGrants_Fail() {
+#  preTest
+#  createTestData "withdata2"
+#  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/withdata2/createuser.sql"
+#  mysql ${MYSQLCREDS} -ANe "GRANT INSERT ON testbench.* TO 'userwd2gf'@'%';"
+#  echo "MYSQL_USER=userwd2gf" >> "./test/envfile"
+#  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/withdata2/grantToUsers.sql"
+#  echo "SKIP_OP=structure,data,routines,events,triggers,users,views" >> "./test/envfile"
+#  ./backup.sh
+#  assertEquals 214 "$?"
+#  destroyTestData "withdata2"
+#  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/withdata2/deleteuser.sql"
+#  postTest
+#}
 
 testBACKUP_manualgrant_Success() {
   preTest
