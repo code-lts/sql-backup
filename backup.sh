@@ -248,11 +248,16 @@ if [ "$?" -eq 0 ]; then
   # Needs refactor
   GRANTS_SQL="select distinct concat( \"SHOW GRANTS FOR '\",user,\"'@'\",host,\"';\" ) from mysql.user WHERE user != 'root';"
   GRANTS_LIST=$(mysql ${MYSQL_CONN} -ANe"${GRANTS_SQL}")
-  echo ${GRANTS_LIST} | mysql --default-character-set=utf8 --skip-comments ${MYSQL_CONN} | sed 's/\(GRANT .*\)/\1;/;s/^\(Grants for .*\)/-- \1 --/;/--/{x;p;x;}' > ${BACKUP_DIR}/grants.sql
-
+  if [ "$?" -ne 0 ]; then
+    exitWithMsg 215 "Grants list failed"
+  fi
+  GRANTS_LIST=$(echo ${GRANTS_LIST} | mysql --default-character-set=utf8 --skip-comments ${MYSQL_CONN})
   if [ "$?" -ne 0 ]; then
     exitWithMsg 214 "Grants dump failed"
   fi
+  echo ${GRANTS_LIST} | sed 's/\(GRANT .*\)/\1;/;s/^\(Grants for .*\)/-- \1 --/;/--/{x;p;x;}' > ${BACKUP_DIR}/grants.sql
+
+
   # Removes double backslashes >  \\
   sed -i -e 's/\\\\//g' ${BACKUP_DIR}/grants.sql
   # echo -e ${GRANTS_SQL}

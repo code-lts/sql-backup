@@ -1,0 +1,1 @@
+DROP USER 'userwd2gf'@'%';

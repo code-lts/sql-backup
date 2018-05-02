@@ -1,0 +1,1 @@
+CREATE USER 'userwd2gf'@'%' IDENTIFIED BY 'testbench';

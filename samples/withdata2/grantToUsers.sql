@@ -1,0 +1,1 @@
+GRANT ALL PRIVILEGES ON mysql.user TO 'userwd2gf'@'%';

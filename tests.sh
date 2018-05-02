@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Error codes
 # 200 = Empty Variable
 # 201 = Value is not a file
@@ -15,6 +15,7 @@
 # 212 = Views dump failed
 # 213 = Users dump failed
 # 214 = Grants dump failed
+# 215 = Grants list failed
 
 MYSQL_HOST="localhost"
 MYSQL_USER="root"
@@ -22,11 +23,6 @@ MYSQL_PASS="testbench"
 SCRIPT_ROOT="$(dirname $0)"
 echo "SCRIPT_ROOT=${SCRIPT_ROOT}"
 MYSQLCREDS="-h${MYSQL_HOST} -u${MYSQL_USER} -p${MYSQL_PASS}"
-
-testEMPTY_VAR_Fail() {
-  ./backup.sh 1>/dev/null 2>&1
-  assertEquals 200 "$?"
-}
 
 compareFiles() {
   compareFilesOrExit "${SCRIPT_ROOT}/samples/$1/structure.sql" "${SCRIPT_ROOT}/test/structure.sql"
@@ -37,6 +33,10 @@ compareFiles() {
   compareFilesOrExit "${SCRIPT_ROOT}/samples/$1/views.sql" "${SCRIPT_ROOT}/test/views.sql"
   compareFilesOrExit "${SCRIPT_ROOT}/samples/$1/triggers.sql" "${SCRIPT_ROOT}/test/triggers.sql"
   compareFilesOrExit "${SCRIPT_ROOT}/samples/$1/routines.sql" "${SCRIPT_ROOT}/test/routines.sql"
+}
+
+sourceCopy() {
+  sed -n "/^$1()/,/^}/p" ./backup.sh > func.sh; source func.sh; rm func.sh
 }
 
 compareFilesSUM() {
@@ -55,6 +55,11 @@ compareFilesSUM() {
 compareFilesOrExit() {
   diff -ia --unified=1 --suppress-common-lines "$1" "$2"
   compareFilesSUM "$@" || fail "Files are not identical ($1) ($2)"
+}
+
+testEMPTY_VAR_Fail() {
+  ./backup.sh 1>/dev/null 2>&1
+  assertEquals 200 "$?"
 }
 
 testBACKUP_CONFIG_ENVFILE_Fail() {
@@ -176,8 +181,11 @@ testBACKUP_Success_NoDiff_Strange_BS_Data2() {
 
 testBACKUP_Success_NoDatabases() {
   preTest
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/createuser.sql"
+  echo "MYSQL_USER=grantfail" >> "./test/envfile"
   ./backup.sh
   assertEquals 206 "$?"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/deleteuser.sql"
   postTest
 }
 
@@ -196,15 +204,15 @@ testEvents_NoData_Fail() {
   postTest
 }
 
-testViews_Fail() {
+testViewsDump_Fail() {
   preTest
   createTestData "withdata2"
   mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/createuser.sql"
-  mysql ${MYSQLCREDS} -ANe "GRANT SELECT, EVENT, TRIGGER ON testbench.* TO 'grantfail'@'%';"
+  mysql ${MYSQLCREDS} -ANe "GRANT INSERT ON testbench.* TO 'grantfail'@'%';"
   echo "MYSQL_USER=grantfail" >> "./test/envfile"
   mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToUsers.sql"
   mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToDB.sql"
-  echo "MYSQL_USER=grantfail" >> "./test/envfile"
+  echo "SKIP_OP=structure,data,routines,events,triggers,users,grants" >> "./test/envfile"
   ./backup.sh
   assertEquals 212 "$?"
   destroyTestData "withdata2"
@@ -233,7 +241,6 @@ testEvents_Fail() {
   echo "MYSQL_USER=grantfail" >> "./test/envfile"
   mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToUsers.sql"
   mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToDB.sql"
-  echo "MYSQL_USER=grantfail" >> "./test/envfile"
   ./backup.sh
   assertEquals 211 "$?"
   destroyTestData "withdata2"
@@ -249,7 +256,6 @@ testStructure_Fail() {
   echo "MYSQL_USER=grantfail" >> "./test/envfile"
   mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToUsers.sql"
   mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToDB.sql"
-  echo "MYSQL_USER=grantfail" >> "./test/envfile"
   ./backup.sh
   assertEquals 207 "$?"
   destroyTestData "withdata2"
@@ -257,54 +263,100 @@ testStructure_Fail() {
   postTest
 }
 
-#testData_Fail() {
-#  preTest
-#  createTestData "withdata2"
-#  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/createuser.sql"
-#  mysql ${MYSQLCREDS} -ANe "GRANT INSERT, TRIGGER, SHOW VIEW, ALTER ON testbench.* TO 'grantfail'@'%';"
-#  echo "MYSQL_USER=grantfail" >> "./test/envfile"
-#  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToUsers.sql"
-#  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToDB.sql"
-#  echo "MYSQL_USER=grantfail" >> "./test/envfile"
-#  ./backup.sh
-#  assertEquals 208 "$?"
-#  destroyTestData "withdata2"
-#  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/deleteuser.sql"
-#  postTest
-#}
+testSkip_HasNot() {
+  export SKIP_OP=()
+  sourceCopy "hasSkip"
+  hasSkip "t"
+  assertEquals 0 "$?"
+  unset SKIP_OP
+}
 
-#testRoutines_Fail() {
-#  preTest
-#  createTestData "withdata2"
-#  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/createuser.sql"
-#  mysql ${MYSQLCREDS} -ANe "GRANT SELECT, TRIGGER, SHOW VIEW, EVENT ON testbench.* TO 'grantfail'@'%';"
-#  mysql ${MYSQLCREDS} -ANe "CREATE DEFINER=`root`@`%` FUNCTION `procédure de test n°2`(`entrée 1` VARCHAR(35) CHARSET cp1250) RETURNS INT(1) UNSIGNED COMMENT 'procédure de test n°2' NOT DETERMINISTIC NO SQL SQL SECURITY DEFINER RETURN 1;"
-#  echo "MYSQL_USER=grantfail" >> "./test/envfile"
-#  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToUsers.sql"
-#  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToDB.sql"
-#  echo "MYSQL_USER=grantfail" >> "./test/envfile"
-#  ./backup.sh
-#  assertEquals 209 "$?"
-#  destroyTestData "withdata2"
-#  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/deleteuser.sql"
-#  postTest
-#}
+testSkip_Has() {
+  export SKIP_OP=("skip1")
+  sourceCopy "hasSkip"
+  hasSkip "skip1"
+  assertEquals 1 "$?"
+  unset SKIP_OP
+}
 
-#testTriggers_Fail() {
-  #preTest
-  #createTestData "withdata2"
-  #mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/createuser.sql"
-  #mysql ${MYSQLCREDS} -ANe "GRANT SELECT, EVENT, SHOW VIEW ON testbench.* TO 'grantfail'@'%';"
-  #echo "MYSQL_USER=grantfail" >> "./test/envfile"
-  #mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToUsers.sql"
-  #mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToDB.sql"
-  #echo "MYSQL_USER=grantfail" >> "./test/envfile"
-  #./backup.sh
-  #assertEquals 210 "$?"
-  #destroyTestData "withdata2"
-  #mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/deleteuser.sql"
-  #postTest
-#}
+testData_Fail() {
+  preTest
+  createTestData "withdata2"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/createuser.sql"
+  mysql ${MYSQLCREDS} -ANe "GRANT INSERT ON testbench.* TO 'grantfail'@'%';"
+  echo "MYSQL_USER=grantfail" >> "./test/envfile"
+  echo "SKIP_OP=structure,routines,triggers,events,views,users,grants" >> "./test/envfile"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToUsers.sql"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToDB.sql"
+  ./backup.sh
+  assertEquals 208 "$?"
+  destroyTestData "withdata2"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/deleteuser.sql"
+  postTest
+}
+
+testRoutines_Fail() {
+  preTest
+  createTestData "withdata2"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/createuser.sql"
+  mysql ${MYSQLCREDS} -ANe "GRANT INSERT ON testbench.* TO 'grantfail'@'%';"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/withdata2/function1.sql"
+  echo "MYSQL_USER=grantfail" >> "./test/envfile"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToUsers.sql"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToDB.sql"
+  echo "SKIP_OP=structure,data,triggers,events,views,users,grants" >> "./test/envfile"
+  ./backup.sh
+  assertEquals 209 "$?"
+  destroyTestData "withdata2"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/deleteuser.sql"
+  postTest
+}
+
+testTriggers_Fail() {
+  preTest
+  createTestData "withdata2"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/createuser.sql"
+  mysql ${MYSQLCREDS} -ANe "GRANT INSERT ON testbench.* TO 'grantfail'@'%';"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/withdata2/trigger1.sql"
+  echo "MYSQL_USER=grantfail" >> "./test/envfile"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToUsers.sql"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToDB.sql"
+  echo "SKIP_OP=structure,data,routines,events,views,users,grants" >> "./test/envfile"
+  ./backup.sh
+  assertEquals 210 "$?"
+  destroyTestData "withdata2"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/deleteuser.sql"
+  postTest
+}
+
+testGrantsList_Fail() {
+  preTest
+  createTestData "withdata2"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/withdata2/createuser.sql"
+  mysql ${MYSQLCREDS} -ANe "GRANT INSERT ON testbench.* TO 'userwd2gf'@'%';"
+  echo "MYSQL_USER=userwd2gf" >> "./test/envfile"
+  echo "SKIP_OP=structure,data,routines,events,triggers,users,views" >> "./test/envfile"
+  ./backup.sh
+  assertEquals 215 "$?"
+  destroyTestData "withdata2"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/withdata2/deleteuser.sql"
+  postTest
+}
+
+testGrants_Fail() {
+  preTest
+  createTestData "withdata2"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/withdata2/createuser.sql"
+  mysql ${MYSQLCREDS} -ANe "GRANT INSERT ON testbench.* TO 'userwd2gf'@'%';"
+  echo "MYSQL_USER=userwd2gf" >> "./test/envfile"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/withdata2/grantToUsers.sql"
+  echo "SKIP_OP=structure,data,routines,events,triggers,users,views" >> "./test/envfile"
+  ./backup.sh
+  assertEquals 214 "$?"
+  destroyTestData "withdata2"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/withdata2/deleteuser.sql"
+  postTest
+}
 
 testBACKUP_manualgrant_Success() {
   preTest
@@ -313,10 +365,28 @@ testBACKUP_manualgrant_Success() {
   mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToTestBench.sql"
   mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToUsers.sql"
   mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToDB.sql"
+  mysql ${MYSQLCREDS} -ANe "GRANT ALL PRIVILEGES ON mysql.* TO 'grantfail'@'%';"
   echo "MYSQL_USER=grantfail" >> "./test/envfile"
   ./backup.sh
   assertEquals 0 "$?"
   destroyTestData "withdata0"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/deleteuser.sql"
+  postTest
+}
+
+testNoSkipDatabases() {
+  preTest
+  createTestData "withdata2"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/createuser.sql"
+  mysql ${MYSQLCREDS} -ANe "GRANT INSERT ON testbench.* TO 'grantfail'@'%';"
+  echo "MYSQL_USER=grantfail" >> "./test/envfile"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToUsers.sql"
+  mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/grantToDB.sql"
+  echo "SKIP_OP=structure,data,routines,events,triggers,users,grants" >> "./test/envfile"
+  echo "SKIP_DATABASES=" >> "./test/envfile"
+  ./backup.sh
+  assertEquals 0 "$?"
+  destroyTestData "withdata2"
   mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/deleteuser.sql"
   postTest
 }
