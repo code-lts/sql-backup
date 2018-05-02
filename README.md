@@ -9,26 +9,31 @@ Backup your MySQL / MariaDB server ( structure, data, users, grants, views, trig
 
 ## Install
 
+### Clone the repository
 ```bash
-
 git clone https://github.com/williamdes/sql-backup.git --depth 1
 ```
+### Move into the directory
 ```bash
 cd sql-backup
-
+```
+### Copy the configuration example
+```bash
 cp .env-example .env
 ```
+### Edit your configuration file
+#### Nano
 ```bash
 nano .env
 ```
-or
+#### Vi
 
 ```bash
 vi .env
 
 ```
-then
-
+### Start backup
+Execute this command to start the backup !
 ```
 ./backup.sh
 ```
