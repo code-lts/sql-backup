@@ -1,10 +1,10 @@
 # sql-backup - Backup your MySQL / MariaDB server !
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/8b72cd7316b745ed838b739cef3ebd38)](https://app.codacy.com/app/williamdes/sql-backup?utm_source=github.com&utm_medium=referral&utm_content=williamdes/sql-backup&utm_campaign=badger)
-[![Build Status](https://travis-ci.org/williamdes/sql-backup.svg?branch=master)](https://travis-ci.org/williamdes/sql-backup)
+[![Actions Status](https://github.com/williamdes/sql-backup/workflows/Run%20tests/badge.svg)](https://github.com/williamdes/sql-backup/actions)
 [![codecov](https://codecov.io/gh/williamdes/sql-backup/branch/master/graph/badge.svg)](https://codecov.io/gh/williamdes/sql-backup)
 [![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)](http://unlicense.org/)
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fwilliamdes%2Fsql-backup.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fwilliamdes%2Fsql-backup?ref=badge_shield)
-
+[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/1827/badge)](https://bestpractices.coreinfrastructure.org/projects/1827)
 Backup your MySQL / MariaDB server ( structure, data, users, grants, views, triggers, routines, events )
 
 ## Install

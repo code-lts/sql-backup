@@ -1,0 +1,66 @@
+name: Run tests
+
+on: [push]
+
+jobs:
+  test-sh:
+    name: Test files and run coverage
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ROOT_PASSWORD: testbench
+        ports:
+          - "3308:3306"
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+    steps:
+      - uses: actions/checkout@v1
+      - name: Cache shunit2
+        id: cache-shunit2-2_1_7
+        uses: actions/cache@v1
+        with:
+          path: shunit2-2.1.7
+          key: ${{ runner.os }}-shunit2-2.1.7
+      - name: Install shunit
+        if: steps.cache-shunit2-2_1_7.outputs.cache-hit != 'true'
+        run: |
+          wget https://github.com/kward/shunit2/archive/v2.1.7.tar.gz -O shunit2-2.1.7.tar.gz && tar zxf shunit2-2.1.7.tar.gz && rm shunit2-2.1.7.tar.gz
+          chmod +x ./shunit2-2.1.7/shunit2
+      - name: Cache apt
+        id: cache-apt
+        uses: actions/cache@v1
+        with:
+          path: /var/cache/apt/
+          key: ${{ runner.os }}-apt
+      - name: Install needed packages
+        run: sudo apt-get install mysql-client libcurl4-openssl-dev libelf-dev libdw-dev cmake -y --no-install-recommends
+      - name: Cache kcov
+        id: cache-kcov-37
+        uses: actions/cache@v1
+        with:
+          path: kcov-37
+          key: ${{ runner.os }}-kcov-37
+      - name: Install kcov
+        if: steps.cache-kcov-37.outputs.cache-hit != 'true'
+        run: |
+          wget https://github.com/SimonKagstrom/kcov/archive/v37.tar.gz &&
+          tar xzf v37.tar.gz && cd kcov-37 && mkdir build && cd build &&
+          cmake -DCMAKE_INSTALL_PREFIX=/usr .. && make &&
+          sudo make install && cd ../.. &&
+          kcov --version
+      - name: Run tests and coverage
+        env:
+          TEST_MYSQL_HOST: "127.0.0.1"
+          TEST_MYSQL_USER: root
+          TEST_MYSQL_PASS: testbench
+          TEST_MYSQL_PORT: ${{ job.services.mysql.ports['3306'] }}
+        run: |
+          mysql --host ${TEST_MYSQL_HOST} -u${TEST_MYSQL_USER} -p${TEST_MYSQL_PASS} --port ${TEST_MYSQL_PORT} -e "use mysql; delete from user where User != 'root' OR host != '%'; update user set authentication_string=PASSWORD('testbench'), host='%', password_last_changed=FROM_UNIXTIME(1523829600) where User='root'; update user set plugin='mysql_native_password'; delete from user where User = 'sys'; FLUSH PRIVILEGES;"
+          ./tests.sh
+          kcov --include-pattern=backup.sh,tests.sh --exclude-pattern=coverage coverage ./tests.sh
+          sleep 2
+      - name: Send coverage
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
