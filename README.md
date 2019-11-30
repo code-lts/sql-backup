@@ -77,6 +77,7 @@ BACKUP_DIR=/sql_backup
 MYSQL_HOST=localhost
 MYSQL_USER=root
 MYSQL_PASS=root
+MYSQL_PORT=3306
 SKIP_DATABASES=mysql,sys,information_schema,performance_schema,phpmyadmin
 SKIP_OP=users,grants
 ```

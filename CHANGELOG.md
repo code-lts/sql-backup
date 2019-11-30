@@ -15,9 +15,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added unit tests
 - Updated .gitignore
 - Bug fix (no views)
-
-### Will be done
-- Skipping users & grants
+- Added option `SKIP_OP`
+- Added option `MYSQL_PORT`
 
 
 ## [1.0.0] - 2018-04-07
