@@ -17,12 +17,13 @@
 # 214 = Grants dump failed
 # 215 = Grants list failed
 
-MYSQL_HOST="localhost"
-MYSQL_USER="root"
-MYSQL_PASS="testbench"
+TEST_MYSQL_HOST="${TEST_MYSQL_HOST:-localhost}"
+TEST_MYSQL_USER="${TEST_MYSQL_USER:-root}"
+TEST_MYSQL_PASS="${TEST_MYSQL_PASS:-}"
+TEST_MYSQL_PORT="${TEST_MYSQL_PORT:-3306}"
 SCRIPT_ROOT="$(dirname $0)"
 echo "SCRIPT_ROOT=${SCRIPT_ROOT}"
-MYSQLCREDS="-h${MYSQL_HOST} -u${MYSQL_USER} -p${MYSQL_PASS}"
+MYSQLCREDS="${MYSQLCREDS:---host ${TEST_MYSQL_HOST} -u${TEST_MYSQL_USER} -p${TEST_MYSQL_PASS} --port ${TEST_MYSQL_PORT}}"
 
 compareFiles() {
   compareFilesOrExit "${SCRIPT_ROOT}/samples/$1/structure.sql" "${SCRIPT_ROOT}/test/structure.sql"
@@ -70,9 +71,10 @@ testBACKUP_CONFIG_ENVFILE_Fail() {
 }
 
 fillConfigFile() {
-  echo "MYSQL_HOST=${MYSQL_HOST}" >> $1
-  echo "MYSQL_USER=${MYSQL_USER}" >> $1
-  echo "MYSQL_PASS=${MYSQL_PASS}" >> $1
+  echo "MYSQL_HOST=${TEST_MYSQL_HOST}" >> $1
+  echo "MYSQL_USER=${TEST_MYSQL_USER}" >> $1
+  echo "MYSQL_PASS=${TEST_MYSQL_PASS}" >> $1
+  echo "MYSQL_PORT=${TEST_MYSQL_PORT}" >> $1
   echo "SKIP_DATABASES=mysql,sys,information_schema,performance_schema" >> $1
 }
 
@@ -390,5 +392,5 @@ testNoSkipDatabases() {
   mysql ${MYSQLCREDS} < "${SCRIPT_ROOT}/samples/empty/deleteuser.sql"
   postTest
 }
-
+export SHUNIT_COLOR="none" # GitHub actions
 . ./shunit2-2.1.7/shunit2
