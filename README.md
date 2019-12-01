@@ -63,6 +63,7 @@ ON_SUCCESS="${BACKUP_DIR}/onsuccessscript.sh"
 | MYSQL_HOST     	|                                                                                                                                	| NO       	|
 | MYSQL_USER     	|                                                                                                                                	| NO       	|
 | MYSQL_PASS     	|                                                                                                                                	| YES      	|
+| MYSQL_PORT     	| 3306                                                                                                                           	| YES      	|
 | SKIP_DATABASES 	|                                                                                                                                	| YES      	|
 | EXPERT_ARGS    	| --default-character-set=utf8 --extended-insert=FALSE --single-transaction --skip-comments --skip-dump-date --hex-blob --tz-utc 	| YES      	|
 | ON_SUCCESS     	|                                                                                                                                	| YES      	|
