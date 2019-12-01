@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Bug fix (no views)
 - Added option `SKIP_OP`
 - Added option `MYSQL_PORT`
+- Migrate from TravisCI to GitHub actions
+- Some README improvements
 
 ## [1.0.0] - 2018-04-07
 ### Added
