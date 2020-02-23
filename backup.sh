@@ -67,10 +67,10 @@ else
   IFS=$oldIFS
 fi
 
-MYSQL_CONN="-h${MYSQL_HOST} -u${MYSQL_USER} --port ${MYSQL_PORT}"
+MYSQL_CONN="-h${MYSQL_HOST} -u${MYSQL_USER} --port ${MYSQL_PORT:-3306}"
 
 if [ ! -z "${MYSQL_PASS}" ]; then
-    MYSQL_CONN="${MYSQL_CONN} -p${MYSQL_PASS} --port ${MYSQL_PORT}"
+    MYSQL_CONN="${MYSQL_CONN} -p${MYSQL_PASS} --port ${MYSQL_PORT:-3306}"
 fi
 
 if [ -z "${EXPERT_ARGS}" ]; then
