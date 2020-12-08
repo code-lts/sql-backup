@@ -1,0 +1,7 @@
+.gitattributes export-ignore
+.gitignore export-ignore
+.github export-ignore
+postTest.sh export-ignore
+tests.sh export-ignore
+samples export-ignore
+LICENSE.sig export-ignore
