@@ -6,8 +6,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.2.0] - 2020-12-08
+
+- Added a default value for MYSQL_PORT
+
 ## [1.1.0] - 2019-12-01
+
 ### Added
+
 - Check if mysql and mysqldump are installed
 - Updated README.md
 - Added optional `BACKUP_CONFIG_ENVFILE` variable to set the env file location
@@ -23,7 +29,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Some README improvements
 
 ## [1.0.0] - 2018-04-07
+
 ### Added
+
 - CHANGELOG
 - README
 - LICENCE
