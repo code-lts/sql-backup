@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Check if mysql and mysqldump are installed
 - Updated README.md
 - Added optional `BACKUP_CONFIG_ENVFILE` variable to set the env file location
-- Updated .env-example (commented out some optional variables)
+- Updated .env.dist (commented out some optional variables)
 - Added check if `BACKUP_DIR` exists
 - Added exit codes
 - Added unit tests
@@ -27,6 +27,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - CHANGELOG
 - README
 - LICENCE
-- .env-example
+- .env.dist
 - .gitignore
 - backup.sh

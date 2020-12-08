@@ -26,7 +26,7 @@ cd sql-backup
 ### Copy the configuration example
 
 ```sh
-cp .env-example .env
+cp .env.dist .env
 ```
 
 ### Edit your configuration file
