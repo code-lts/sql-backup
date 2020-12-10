@@ -20,13 +20,13 @@ jobs:
         id: cache-shunit2-2_1_7
         uses: actions/cache@v1
         with:
-          path: shunit2-2.1.7
-          key: ${{ runner.os }}-shunit2-2.1.7
+          path: shunit2-2.1.8
+          key: ${{ runner.os }}-shunit2-2.1.8
       - name: Install shunit
         if: steps.cache-shunit2-2_1_7.outputs.cache-hit != 'true'
         run: |
-          wget https://github.com/kward/shunit2/archive/v2.1.7.tar.gz -O shunit2-2.1.7.tar.gz && tar zxf shunit2-2.1.7.tar.gz && rm shunit2-2.1.7.tar.gz
-          chmod +x ./shunit2-2.1.7/shunit2
+          wget https://github.com/kward/shunit2/archive/v2.1.8.tar.gz -O shunit2-2.1.8.tar.gz && tar zxf shunit2-2.1.8.tar.gz && rm shunit2-2.1.8.tar.gz
+          chmod +x ./shunit2-2.1.8/shunit2
       - name: Cache apt
         id: cache-apt
         uses: actions/cache@v1
