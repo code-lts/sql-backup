@@ -393,4 +393,4 @@ testNoSkipDatabases() {
   postTest
 }
 export SHUNIT_COLOR="none" # GitHub actions
-. ./shunit2-2.1.7/shunit2
+. ./shunit2-2.1.8/shunit2
