@@ -39,23 +39,23 @@ jobs:
           sudo apt-get install mysql-client libcurl4-openssl-dev libelf-dev libdw-dev cmake -y --no-install-recommends
           sudo chmod -R 777 ~/.apt-cache
       - name: Cache kcov
-        id: cache-kcov-37
+        id: cache-kcov-38
         uses: actions/cache@v1
         with:
-          path: kcov-37
-          key: ${{ runner.os }}-kcov-37
+          path: kcov-38
+          key: ${{ runner.os }}-kcov-38
       - name: Install kcov
-        if: steps.cache-kcov-37.outputs.cache-hit != 'true'
+        if: steps.cache-kcov-38.outputs.cache-hit != 'true'
         run: |
-          wget https://github.com/SimonKagstrom/kcov/archive/v37.tar.gz &&
-          tar xzf v37.tar.gz && cd kcov-37 && mkdir build && cd build &&
+          wget https://github.com/SimonKagstrom/kcov/archive/v38.tar.gz &&
+          tar xzf v38.tar.gz && cd kcov-38 && mkdir build && cd build &&
           cmake -DCMAKE_INSTALL_PREFIX=/usr .. && make &&
           sudo make install && cd ../.. &&
           kcov --version
       - name: Install kcov from cache
-        if: steps.cache-kcov-37.outputs.cache-hit == 'true'
+        if: steps.cache-kcov-38.outputs.cache-hit == 'true'
         run: |
-          cd kcov-37/build && sudo make install && cd ../.. &&
+          cd kcov-38/build && sudo make install && cd ../.. &&
           kcov --version
       - name: Run tests and coverage
         env:
