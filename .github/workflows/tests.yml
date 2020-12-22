@@ -32,10 +32,10 @@ jobs:
           TEST_MYSQL_USER: root
           TEST_MYSQL_PASS: testbench
           TEST_MYSQL_PORT: ${{ job.services.mysql.ports['3306'] }}
-      - name: move coverage
-        run: ls -lahR ./ && mv ./coverage/tests.sh/cov.xml ./cov.xml
+      - name: list coverage
+        run: ls -lahR ./coverage/tests.sh/cov.xml
       - name: Send coverage
         uses: codecov/codecov-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./cov.xml
+          file: ./coverage/tests.sh/cov.xml
