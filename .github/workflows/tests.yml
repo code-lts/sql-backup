@@ -13,7 +13,7 @@ jobs:
           MYSQL_ROOT_PASSWORD: testbench
         ports:
           - "3306:3306"
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+        options: --name mysql-server --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
     steps:
       - uses: actions/checkout@v2
       - name: prepare mysql server
@@ -28,7 +28,7 @@ jobs:
         with:
           cli: "./run-tests.sh"
         env:
-          TEST_MYSQL_HOST: "127.0.0.1"
+          TEST_MYSQL_HOST: "mysql-server"
           TEST_MYSQL_USER: root
           TEST_MYSQL_PASS: testbench
           TEST_MYSQL_PORT: ${{ job.services.mysql.ports['3306'] }}
