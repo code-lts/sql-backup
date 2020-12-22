@@ -54,7 +54,7 @@ compareFilesSUM() {
 }
 
 compareFilesOrExit() {
-  diff -ia --unified=1 --suppress-common-lines "$1" "$2"
+  diff -ia "$1" "$2"
   compareFilesSUM "$@" || fail "Files are not identical ($1) ($2)"
 }
 
