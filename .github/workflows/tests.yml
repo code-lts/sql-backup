@@ -33,7 +33,7 @@ jobs:
           TEST_MYSQL_PASS: testbench
           TEST_MYSQL_PORT: ${{ job.services.mysql.ports['3306'] }}
       - name: list coverage
-        run: ls -lahR ./coverage/tests.sh/cov.xml
+        run: ls -lahR ./coverage/
       - name: Send coverage
         uses: codecov/codecov-action@v1
         with:
