@@ -15,60 +15,25 @@ jobs:
           - "3308:3306"
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
     steps:
-      - uses: actions/checkout@v1
-      - name: Cache shunit2
-        id: cache-shunit2-2_1_7
-        uses: actions/cache@v1
-        with:
-          path: shunit2-2.1.8
-          key: ${{ runner.os }}-shunit2-2.1.8
-      - name: Install shunit
-        if: steps.cache-shunit2-2_1_7.outputs.cache-hit != 'true'
-        run: |
-          wget https://github.com/kward/shunit2/archive/v2.1.8.tar.gz -O shunit2-2.1.8.tar.gz && tar zxf shunit2-2.1.8.tar.gz && rm shunit2-2.1.8.tar.gz
-          chmod +x ./shunit2-2.1.8/shunit2
-      - name: Cache apt
-        id: cache-apt
-        uses: actions/cache@v1
-        with:
-          path: ~/.apt-cache
-          key: ${{ runner.os }}-apt
-      - name: Install needed packages
-        run: |
-          sudo rm -rf /var/cache/apt/archives && sudo ln -s ~/.apt-cache /var/cache/apt/archives && mkdir -p ~/.apt-cache/partial
-          sudo apt-get install mysql-client libcurl4-openssl-dev libelf-dev libdw-dev cmake -y --no-install-recommends
-          sudo chmod -R 777 ~/.apt-cache
-      - name: Cache kcov
-        id: cache-kcov-38
-        uses: actions/cache@v1
-        with:
-          path: kcov-38
-          key: ${{ runner.os }}-kcov-38
-      - name: Install kcov
-        if: steps.cache-kcov-38.outputs.cache-hit != 'true'
-        run: |
-          wget https://github.com/SimonKagstrom/kcov/archive/v38.tar.gz &&
-          tar xzf v38.tar.gz && cd kcov-38 && mkdir build && cd build &&
-          cmake -DCMAKE_INSTALL_PREFIX=/usr .. && make &&
-          sudo make install && cd ../.. &&
-          kcov --version
-      - name: Install kcov from cache
-        if: steps.cache-kcov-38.outputs.cache-hit == 'true'
-        run: |
-          cd kcov-38/build && sudo make install && cd ../.. &&
-          kcov --version
-      - name: Run tests and coverage
+      - uses: actions/checkout@v2
+      - name: prepare mysql server
         env:
           TEST_MYSQL_HOST: "127.0.0.1"
           TEST_MYSQL_USER: root
           TEST_MYSQL_PASS: testbench
           TEST_MYSQL_PORT: ${{ job.services.mysql.ports['3306'] }}
-        run: |
-          mysql --host ${TEST_MYSQL_HOST} -u${TEST_MYSQL_USER} -p${TEST_MYSQL_PASS} --port ${TEST_MYSQL_PORT} -e "use mysql; delete from user where User != 'root' OR host != '%'; update user set authentication_string=PASSWORD('testbench'), host='%', password_last_changed=FROM_UNIXTIME(1523829600) where User='root'; update user set plugin='mysql_native_password'; delete from user where User = 'sys'; FLUSH PRIVILEGES;"
-          ./tests.sh
-          kcov --include-pattern=backup.sh,tests.sh --exclude-pattern=coverage $(pwd)/coverage ./tests.sh
-          mv $(pwd)/coverage/tests.sh/cov.xml $(pwd)/cov.xml
-          sleep 2
+        run: mysql --host ${TEST_MYSQL_HOST} -u${TEST_MYSQL_USER} -p${TEST_MYSQL_PASS} --port ${TEST_MYSQL_PORT} -e "use mysql; delete from user where User != 'root' OR host != '%'; update user set authentication_string=PASSWORD('testbench'), host='%', password_last_changed=FROM_UNIXTIME(1523829600) where User='root'; update user set plugin='mysql_native_password'; delete from user where User = 'sys'; FLUSH PRIVILEGES;"
+      - name: run my tests
+        uses: sudo-bot/action-shunit2@latest
+        with:
+          cli: "./run-tests.sh"
+        env:
+          TEST_MYSQL_HOST: "127.0.0.1"
+          TEST_MYSQL_USER: root
+          TEST_MYSQL_PASS: testbench
+          TEST_MYSQL_PORT: ${{ job.services.mysql.ports['3306'] }}
+      - name: move coverage
+        run: mv $(pwd)/coverage/tests.sh/cov.xml $(pwd)/cov.xml
       - name: Send coverage
         uses: codecov/codecov-action@v1
         with:
