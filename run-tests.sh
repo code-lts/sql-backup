@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 apk add --update --no-cache mysql-client
 
 ./tests.sh
