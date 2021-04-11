@@ -14,7 +14,7 @@ Backup your MySQL / MariaDB server ( structure, data, users, grants, views, trig
 ### Clone the repository
 
 ```sh
-curl -L -# -o sql-backup.zip https://github.com/code-lts/sql-backup/archive/refs/heads/main.zip
+curl -L -# -o sql-backup.zip https://github.com/code-lts/sql-backup/archive/refs/tags/v1.2.0.zip
 ```
 
 ### Unzip file
@@ -26,7 +26,7 @@ unzip sql-backup.zip
 ### Move into the directory
 
 ```sh
-cd sql-backup-main/
+cd sql-backup-1.2.0/
 ```
 
 ### Copy the configuration example
