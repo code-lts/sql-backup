@@ -1,10 +1,10 @@
 # sql-backup - Backup your MySQL / MariaDB server !
 
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/1d6a522144ca4169a0c679bd9d299341)](https://www.codacy.com/gh/williamdes/sql-backup/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=williamdes/sql-backup&amp;utm_campaign=Badge_Grade)
-[![Actions Status](https://github.com/williamdes/sql-backup/workflows/Run%20tests/badge.svg)](https://github.com/williamdes/sql-backup/actions)
-[![codecov](https://codecov.io/gh/williamdes/sql-backup/branch/master/graph/badge.svg)](https://codecov.io/gh/williamdes/sql-backup)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/1d6a522144ca4169a0c679bd9d299341)](https://www.codacy.com/gh/code-lts/sql-backup/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=code-lts/sql-backup&amp;utm_campaign=Badge_Grade)
+[![Actions Status](https://github.com/code-lts/sql-backup/workflows/Run%20tests/badge.svg)](https://github.com/code-lts/sql-backup/actions)
+[![codecov](https://codecov.io/gh/code-lts/sql-backup/branch/master/graph/badge.svg)](https://codecov.io/gh/code-lts/sql-backup)
 [![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)](http://unlicense.org/)
-[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fwilliamdes%2Fsql-backup.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fwilliamdes%2Fsql-backup?ref=badge_shield)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fcode-lts%2Fsql-backup.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fcode-lts%2Fsql-backup?ref=badge_shield)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/1827/badge)](https://bestpractices.coreinfrastructure.org/projects/1827)
 
 Backup your MySQL / MariaDB server ( structure, data, users, grants, views, triggers, routines, events )
@@ -14,13 +14,19 @@ Backup your MySQL / MariaDB server ( structure, data, users, grants, views, trig
 ### Clone the repository
 
 ```sh
-git clone https://github.com/williamdes/sql-backup.git --depth 1
+curl -L -# -o sql-backup.zip https://github.com/code-lts/sql-backup/archive/refs/heads/main.zip
+```
+
+### Unzip file
+
+```sh
+unzip sql-backup.zip
 ```
 
 ### Move into the directory
 
 ```sh
-cd sql-backup
+cd sql-backup-main/
 ```
 
 ### Copy the configuration example
@@ -113,4 +119,4 @@ SKIP_OP=users,grants
 
 ## License
 
-[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fwilliamdes%2Fsql-backup.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fwilliamdes%2Fsql-backup?ref=badge_large)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fcode-lts%2Fsql-backup.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fcode-lts%2Fsql-backup?ref=badge_large)
