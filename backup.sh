@@ -255,12 +255,14 @@ if [ "$?" -eq 0 ]; then
   if [ "$?" -ne 0 ]; then
     exitWithMsg 214 "Grants dump failed"
   fi
-  echo ${GRANTS_LIST} | sed 's/\(GRANT .*\)/\1;/;s/^\(Grants for .*\)/-- \1 --/;/--/{x;p;x;}' > ${BACKUP_DIR}/grants.sql
-
+  printf "%s\n" "${GRANTS_LIST}" > ${BACKUP_DIR}/grants.sql
+  # Replace headers to the SQL comment format
+  sed -i -E "s/^Grants for (.*)/-- Grants for \1/" ${BACKUP_DIR}/grants.sql
+  # Add a ; at each line end
+  sed -i -E '/^-- Grants for/! s/^(.*)$/\1;/' ${BACKUP_DIR}/grants.sql
 
   # Removes double backslashes >  \\
   sed -i -e 's/\\\\//g' ${BACKUP_DIR}/grants.sql
-  # echo -e ${GRANTS_SQL}
 fi
 
 
