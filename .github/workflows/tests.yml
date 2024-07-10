@@ -15,7 +15,7 @@ jobs:
           - "3306:3306"
         options: --name mysql-server --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: prepare mysql server
         env:
           TEST_MYSQL_HOST: "127.0.0.1"
@@ -33,7 +33,7 @@ jobs:
           TEST_MYSQL_PASS: testbench
           TEST_MYSQL_PORT: ${{ job.services.mysql.ports['3306'] }}
       - name: Send coverage
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage/cov.xml
